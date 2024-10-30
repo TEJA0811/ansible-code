@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-fanout-agent
+  labels:
+    {{- include "fanoutagent.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fanoutagent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "fanoutagent.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.images.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "fanoutagent.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if .Values.global.images.registry }}
+          image: "{{ .Values.global.images.registry }}/{{ .Values.global.images.fanoutagent.repository }}:{{ .Values.global.images.fanoutagent.tag }}"
+          {{- else }}
+          image: "{{ .Values.global.images.fanoutagent.repository }}:{{ .Values.global.images.fanoutagent.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.global.images.pullPolicy }}
+          env:
+            - name: SILENT_INSTALL_FILE
+              value: /shared-volume/silent.properties
+          ports:
+          {{- range $port := .Values.service.ports }}
+            - name: port-{{ $port }}
+              containerPort: {{ $port }}
+              protocol: TCP
+         {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /config
+              subPath: {{ .Release.Name }}-fanout-agent
+      volumes:
+        - name: data
+        {{- if .Values.global.persistence.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.global.persistence.existingClaim }}
+        {{- else }}    
+          persistentVolumeClaim: 
+            claimName: {{ .Release.Name }}-fanout-agent-data-dynamic-pvc
+        {{- end }}    
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

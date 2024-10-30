@@ -1,0 +1,25 @@
+---
+
+# Major version of the product.
+marketing_major : "4"
+# Minor version of the product.
+marketing_minor : "8"
+# Revision version of the product.
+marketing_revision : "8"
+
+
+# Major version of Postgres
+postgres_marketing_major : "12"
+# Minor version of Postgres
+postgres_marketing_minor : "15"
+
+# Major version of CoreDNS
+coredns_marketing_major : "1"
+# Minor version of CoreDNS
+coredns_marketing_minor : "10"
+# Revision version of CoreDNS
+coredns_marketing_revision : "1"
+
+# SSPR Version
+sspr_version : "4.7.0.0-ea"
+

@@ -1,0 +1,42 @@
+{{- if (include "identity-manager.identityengine.deploy" .) }}
+
+{{- range untilStep 0 (int .Values.identityengine.replicaCount) 1 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  
+  name: {{ include "identity-manager.identityengine.name" $ }}-{{ . }}-external
+  annotations:
+    {{- toYaml $.Values.identityengine.service_external.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.identityengine.labels" $ | nindent 4 }}
+spec:
+  type: {{ $.Values.identityengine.service_external.type }}
+  ports:
+    - port: {{ $.Values.identityengine.service.ports.ldapsPort }}
+      targetPort: ldaps-port
+      protocol: TCP
+      name: ldaps
+    - port: {{ $.Values.identityengine.service.ports.ldapPort }}
+      targetPort: ldap-port
+      protocol: TCP
+      name: ldap
+    - port: {{ $.Values.identityengine.service.ports.ncpPort }}
+      targetPort: ncp-port
+      protocol: TCP
+      name: ncp
+    - port: {{ $.Values.identityengine.service.ports.httpPort }}
+      targetPort: http-port
+      protocol: TCP
+      name: http
+    - port: {{ $.Values.identityengine.service.ports.httpsPort }}
+      targetPort: https-port
+      protocol: TCP
+      name: https
+  selector:
+    {{- include "identity-manager.identityengine.selectorLabels" $ | nindent 4 }}
+    statefulset.kubernetes.io/pod-name: {{ include "identity-manager.identityengine.name" $ }}-{{ . }}
+{{- end }}
+
+{{- end }}

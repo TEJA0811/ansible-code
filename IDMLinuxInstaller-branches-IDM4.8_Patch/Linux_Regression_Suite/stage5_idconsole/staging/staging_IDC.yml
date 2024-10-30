@@ -1,0 +1,39 @@
+---
+# Play to revert snapshots of a VM if defined
+- name: 'Revert Snapshots'
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  vars_files:
+    - ./roles/variables_IDC/defaults/main.yml
+  roles:
+#  - role:                     variables_IDC
+#    when:                     false
+  - role:                     revert_snapshots
+    when:                     
+      - vm_list is defined
+  tags: revert_snapshots
+
+#Play to deploy Identity Console
+- name:  'Deploy Identity Console'
+  hosts:  IDC_node
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     install_IDC
+    when:                     
+      - groups[ 'IDC_node' ] | length > 0
+#      - new_build 
+      - ( vm_list[0].vm_snapshot_name  is not defined ) or ( vm_list[0].vm_snapshot_name == 'base_ansible' )
+  post_tasks:
+   - name: "Remove certs from install_IDC role"
+     file: 
+       path: "{{ item }}"
+       state: absent
+     with_items: 
+       - "{{ playbook_dir }}/roles/install_IDC/files/SSCert.pem"
+       - "{{ playbook_dir }}/roles/install_IDC/files/cert.pfx"
+     delegate_to: 'localhost'
+  tags: deploy_IDC
+  
+...

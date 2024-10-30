@@ -1,0 +1,16 @@
+//VARIABLES
+SRV1=IDVAULTSERVER
+AdminPassword=novell
+TreeOrg=OU=servers.O=system.T=S1ENGINECONTAINER_TREE
+ServerAddress=10.71.35.182
+ftpServerAddr=10.71.35.182
+Remote=false
+ftpUser=nds
+ftpPassword=novell
+eDirLDAPPort=389
+queryDir=/data/idm/query
+inputDir=/data/idm/input
+outputDir=/data/idm/output
+containerQueryDir=/config/idm/query
+containerInputDir=/config/idm/input
+containerOutputDir=/config/idm/output

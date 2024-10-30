@@ -1,0 +1,18 @@
+{{- if not .Values.persistence.existingClaim  -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-rl-dynamic-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.persistence.dynamicClaim.storageSize }}
+  storageClassName: {{ .Values.persistence.dynamicClaim.storageClassName }}
+  {{- with .Values.persistence.dynamicClaim.selector }}
+  selector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

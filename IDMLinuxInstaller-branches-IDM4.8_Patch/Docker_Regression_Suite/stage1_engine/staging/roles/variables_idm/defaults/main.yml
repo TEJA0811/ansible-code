@@ -1,0 +1,33 @@
+---
+def__idmProperties_file: "{{ role_path }}/files/silent.properties"
+# defaults file for engine
+
+## Major version of the product.
+#marketing_major : "4"
+## Minor version of the product.
+#marketing_minor : "8"
+## Revision version of the product.
+#marketing_revision : "6"
+
+# Location of source images
+images_dir: "/home/Identity_Manager_{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}_Containers"
+
+
+
+
+## Container specific poperties
+#engine_container_ipaddress : "192.168.0.2"
+engine_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+engine_container_name : "engine-container"
+engine_shared_volume : "/data"
+engine_volumes :
+  - "/data:/config" 
+engine_files :
+  - "XMLPipeShim.jar"
+engine_port_mapping :
+  - "636:636"
+  - "389:389"
+  - "524:524"
+network_set: "host"
+
+...

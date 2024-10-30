@@ -1,0 +1,8 @@
+version: 1
+
+dn: cn=__ID_VAULT_TREENAME__ CA,cn=Security
+changetype: modify
+add: ACL
+ACL: 1#subtree#__ID_VAULT_SERVER_LDAP_DN__#[Entry Rights]
+ACL: 35#subtree#__ID_VAULT_SERVER_LDAP_DN__#[All Attributes Rights]
+-

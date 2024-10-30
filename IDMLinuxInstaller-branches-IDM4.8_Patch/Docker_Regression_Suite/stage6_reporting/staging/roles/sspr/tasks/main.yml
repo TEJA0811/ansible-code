@@ -1,0 +1,81 @@
+---
+# tasks file for sspr
+  
+- name : Get SSPR image file stats
+  local_action: stat path="{{ images_dir }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_sspr.tar.gz"
+  register: ssprfile
+
+- name : Copy SSPR image to Docker host
+  copy :
+          src : "{{ images_dir }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_sspr.tar.gz"
+          dest : "{{ sspr_shared_volume }}"
+  when : ssprfile.stat.exists
+
+- name : Load the SSPR image
+  docker_image:
+    state : present
+    name: sspr/sspr-webapp:latest
+    load_path: "{{sspr_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_sspr.tar.gz"
+    timeout: 3000
+    source: load
+  notify : Pull SSPR image
+
+- name : Create SSPR folder if it doesn't exist in target server
+  file :
+    path : "{{ sspr_shared_volume }}/sspr"
+    state : directory
+    mode : '755'
+    
+# - name : Copy silent.properties file to target server
+#   copy :
+#     src : "{{ playbook_dir }}/roles/variables/files/silent.properties"
+#     dest : "{{ sspr_shared_volume }}" 
+    
+    
+# - name : Copy SSPR files to shared volume
+#   copy :
+#     src : "{{ playbook_dir }}/input/{{ item }}"
+#     dest : "{{ sspr_shared_volume }}"
+#   loop: "{{ sspr_files }}"
+#   when: sspr_files is defined
+
+- name : Deploy SSPR container
+  docker_container :
+    name : "{{ sspr_container_name }}"
+    image : "sspr/sspr-webapp:latest"
+    state: started
+    stop_timeout: 300
+    hostname : "{{ SSPR_SERVER_HOST }}"
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+        # ipv4_address : "{{ sspr_container_ipaddress }}"
+    volumes : "{{ sspr_volumes | default([]) }}"
+    ports : "{{ sspr_port_mapping | default([]) }}"
+    # dns_servers : "{{ dns_list | default([]) }}"
+    env:
+      SILENT_INSTALL_FILE : /config/silent.properties
+  tags : deploy_sspr_container
+  notify : Deploy SSPR Container
+
+# Pause for 10 seconds to build app cache.
+- pause:
+    seconds : 10
+
+- name : Configure SSPR
+  shell : |
+    docker cp "{{ sspr_shared_volume }}/silent.properties" "{{ sspr_container_name }}":/tmp
+    docker exec -it "{{ sspr_container_name }}" /app/command.sh ImportPropertyConfig /tmp/silent.properties
+  notify : SSPR_silent.properties file copied and loaded
+
+- name : Delete SSPR tarball
+  file :
+          path : "{{sspr_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_sspr.tar.gz"
+          state : absent
+          
+# - name: Delete silent.properties file
+#   file:
+#     path: "{{ sspr_shared_volume }}/silent.properties"
+#     state: absent
+
+

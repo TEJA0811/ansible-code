@@ -1,0 +1,29 @@
+version: 1
+
+dn: ___UA_ADMIN___
+changetype: add
+sn: Administrator
+givenName: UserApplication
+userpassword: ___UA_ADMIN_PWD___
+objectClass: inetOrgPerson
+objectClass: Person
+objectClass: ndsLoginProperties
+objectClass: Top
+objectClass: srvprvEntityAux
+
+dn: o=data
+changetype: modify
+add: ACL
+ACL: 1#subtree#[Root]#[Entry Rights]
+ACL: 3#subtree#o=data#description
+ACL: 3#subtree#o=data#directReports
+ACL: 3#subtree#o=data#mail
+ACL: 3#subtree#o=data#manager
+ACL: 3#subtree#o=data#photo
+ACL: 3#subtree#o=data#srvprvQueryList
+ACL: 3#subtree#o=data#srvprvUserPrefs
+ACL: 3#subtree#o=data#telephoneNumber
+ACL: 3#subtree#o=data#title
+ACL: 17#subtree#___UA_ADMIN___#[Entry Rights]
+ACL: 35#subtree#___UA_ADMIN___#[All Attributes Rights]
+-

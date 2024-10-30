@@ -1,0 +1,8 @@
+---
+xpoz_home_path: "C:\\CICD_pipeline_containers"
+results_dir: "/root/consolidate_reports"
+fanoutagent_shared_volume: "/data/FOA_data"
+
+
+...
+

@@ -1,0 +1,21 @@
+{{- if (include "identity-manager.osp.deploy" .) }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "identity-manager.osp.name" . }}
+  annotations:
+    {{- toYaml .Values.osp.service.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.osp.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.osp.service.type }}
+  ports:
+    - port: {{ .Values.osp.service.ports.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "identity-manager.osp.selectorLabels" . | nindent 4 }}
+
+{{- end }}

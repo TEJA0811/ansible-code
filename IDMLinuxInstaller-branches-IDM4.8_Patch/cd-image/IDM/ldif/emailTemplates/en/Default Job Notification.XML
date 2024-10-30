@@ -1,0 +1,19 @@
+<html xmlns:form="http://www.novell.com/dirxml/mtask/form">
+<head>
+  <title>Job Notification Status</title>
+  <style> <!-- body { font-family: Trebuchet MS } --> </style>
+</head>
+<body BGCOLOR="#FFFFFF">
+  <p>The $job-dn$ job resulted with the following status: $result-level$</p>
+  	<form:if-item-exists name="result-message">
+			<p>
+				Job message was: $result-message$
+			</p>
+	</form:if-item-exists>
+  	<form:if-item-exists name="result-object">
+			<p>
+				Job result was: $result-object$
+			</p>
+	</form:if-item-exists>
+</body>
+</html>

@@ -1,0 +1,9 @@
+---
+# defaults file for variables_IDC
+#build_dest_location: "/root/tmp"
+restapi_location: "/home/linux/IDConsoleRestAuto"
+results_dir: "/root/consolidate_reports"
+allure_results_dir: "/root/containers_IDC/allure-report"
+idconsole_shared_volume: "/data/IDC_data"
+...
+

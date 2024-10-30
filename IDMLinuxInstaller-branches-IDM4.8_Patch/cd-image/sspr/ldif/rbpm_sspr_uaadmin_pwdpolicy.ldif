@@ -1,0 +1,25 @@
+version: 1
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nsimAssignments
+nsimAssignments: ___ID_VAULT_ADMIN_LDAP___
+-
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nsimAssignments
+nsimAssignments: ___UA_ADMIN___
+-
+
+dn: ___ID_VAULT_ADMIN_LDAP___
+changetype: modify
+add: nspmpasswordpolicydn
+nspmpasswordpolicydn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+-
+
+dn: ___UA_ADMIN___
+changetype: modify
+add: nspmpasswordpolicydn
+nspmpasswordpolicydn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+-

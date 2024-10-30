@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--============================================================================
+  Copyright (c) 2006-2017 Unpublished Work of NetIQ Corporation. All Rights Reserved.
+
+  THIS WORK IS AN UNPUBLISHED WORK AND CONTAINS CONFIDENTIAL,
+  PROPRIETARY AND TRADE SECRET INFORMATION OF NETIQ. ACCESS TO
+  THIS WORK IS RESTRICTED TO (I) NETIQ EMPLOYEES WHO HAVE A NEED
+  TO KNOW HOW TO PERFORM TASKS WITHIN THE SCOPE OF THEIR ASSIGNMENTS AND
+  (II) ENTITIES OTHER THAN NETIQ WHO HAVE ENTERED INTO
+  APPROPRIATE LICENSE AGREEMENTS. NO PART OF THIS WORK MAY BE USED,
+  PRACTICED, PERFORMED, COPIED, DISTRIBUTED, REVISED, MODIFIED,
+  TRANSLATED, ABRIDGED, CONDENSED, EXPANDED, COLLECTED, COMPILED,
+  LINKED, RECAST, TRANSFORMED OR ADAPTED WITHOUT THE PRIOR WRITTEN
+  CONSENT OF NETIQ. ANY USE OR EXPLOITATION OF THIS WORK WITHOUT
+  AUTHORIZATION COULD SUBJECT THE PERPETRATOR TO CRIMINAL AND CIVIL
+  LIABILITY.
+  ===========================================================================-->
+  <logging xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="logging-config.xsd">
+
+    <prefix>[RBPM]</prefix>
+
+    <!-- example of enabling TRACE level -->
+    
+    <logger name="com.novell.soa.af" additivity="true" level="TRACE"/>
+    
+    
+    <logger name="com.novell" additivity="true" level="INFO">
+      <appender-ref ref="CONSOLE_DEBUG"/>
+    </logger>
+   
+
+    <!-- Appender definitions -->
+    <appenders>
+        <!-- CONSOLE and FILE appender are defined in jboss-log4j.xml -->
+        <!-- CEF appender -->
+      
+       <appender class="com.netiq.idm.logging.syslog.CEFSyslogAppender" name="CEF">
+            <param name="Threshold" value="INFO"/>
+            <param name="Facility" value="user"/>
+            <param name="SyslogHost" value="${com.netiq.ism.audit.cef.host:{{ groups['slm_iga'][0] }}}" />
+            <param name="SyslogPort" value="${com.netiq.ism.audit.cef.port:1468}" />
+            <param name="SyslogProtocol" value="${com.netiq.ism.audit.cef.protocol:tcp}" />
+            <param name="SyslogSslKeystoreFile" value="${com.netiq.idm.audit.cef.tls-keystore:/opt/netiq/idm/apps/jre/lib/security/cacerts}" />
+            <param name="SyslogSslKeystorePassword" value="${com.netiq.idm.audit.cef.tls-keystore-password:KeystorePassword}" />
+            <param name="CacheDir" value="${com.netiq.ism.audit.cef.cache-file-dir:/opt/netiq/idm/apps/tomcat}" />
+            <param name="CacheRolloverSize" value="2"/>
+            <param name="ApplicationName" value="RBPM"/>
+            <param name="EventPrefix" value="IDM:"/>
+        </appender>
+          </appenders>
+
+    <!--
+        Logger definitions
+
+        NOTE: CONSOLE & FILE appenders should be defined in (jboss-)log4j.xml file.
+        Additivity of true means the loggers defined below will inherit the appenders.
+    -->
+    <loggers>
+        <logger name="com.novell" level="INFO" additivity="true">        
+            
+            <appender-ref ref="CEF"/>
+            
+        </logger>
+        <logger name="com.sssw" level="INFO" additivity="true">
+           
+            <appender-ref ref="CEF"/>
+            
+        </logger>
+        <logger name="com.netiq" level="INFO" additivity="true">
+            
+            <appender-ref ref="CEF"/>
+          
+        </logger>
+        <logger name="com.novell.afw.portal.aggregation" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portal.persist" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portal.portlet" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portal.util" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portlet.consumer" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portlet.core" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portlet.persist" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portlet.producer" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.portlet.util" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.theme" level="INFO" additivity="true"/>
+        <logger name="com.novell.afw.util" level="INFO" additivity="true"/>
+        <logger name="com.novell.common.auth" level="INFO" additivity="true"/>
+        <logger name="com.novell.idm.security.authorization.service" level="INFO" additivity="true"/>
+        <logger name="com.novell.pwdmgt.actions" level="INFO" additivity="true"/>
+        <logger name="com.novell.pwdmgt.util" level="INFO" additivity="true"/>
+        <logger name="com.novell.pwdmgt.service" level="INFO" additivity="true"/>
+        <logger name="com.novell.pwdmgt.soap" level="INFO" additivity="true"/>
+        <logger name="com.novell.roa.resources" level="INFO" additivity="true"/>
+        <logger name="com.novell.soa.af.impl" level="INFO" additivity="true"/>
+        <logger name="com.novell.soa.script" level="INFO" additivity="true"/>
+        <logger name="com.novell.soa.ws.impl" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.apwa" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.impl.portlet" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.impl.portlet.util" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.impl.servlet" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.impl.uictrl" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.impl.vdata.model" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.impl.vdata.definition" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.spi" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.cachemgr" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.core" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.directory" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.event" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.factory" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.persist" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.resource" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.security" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.server" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.servlet" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.session" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.usermgr" level="INFO" additivity="true"/>
+        <logger name="com.sssw.fw.util" level="INFO" additivity="true"/>
+        <logger name="com.sssw.portal.manager" level="INFO" additivity="true"/>
+        <logger name="com.sssw.portal.persist" level="INFO" additivity="true"/>
+        <logger name="com.novell.idm.nrf.persist" level="INFO" additivity="true"/>
+        <logger name="com.novell.idm.nrf.service" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.impl.uictrl" level="INFO" additivity="true"/>
+        <logger name="com.novell.srvprv.spi.uictrl" level="INFO" additivity="true"/>
+    </loggers>
+</logging>

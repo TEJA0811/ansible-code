@@ -1,0 +1,198 @@
+###################################################################################################
+#                                   GLOBAL VALUES                                                 #
+###################################################################################################
+
+global:
+  images:
+    pullPolicy: Always
+    registry: __CONTAINER_REGISTRY_SERVER__
+    imagePullSecrets:
+      - name: regcred
+
+  passwords:
+    secretName: init-secret
+
+  # Custom Identity Vault Root Container
+  custom_id_vault_root_container:
+    enable: "__ENABLE_CUSTOM_CONTAINER_CREATION__"
+    ldif_configMap: custom-ldif
+
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/upstream-vhost: $host
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: https
+      nginx.ingress.kubernetes.io/affinity: "cookie"
+      nginx.ingress.kubernetes.io/session-cookie-secure: "true"
+    host: "__KUBE_INGRESS_HOST_NAME__"
+    tls:
+      secretName: ingress-tls
+
+  persistence:
+    existingClaim:
+    dynamicClaim:
+      storageClassName: "__KUBE_PERSISTENCE_STORAGE_CLASS__"
+      storageSize: "__KUBE_PERSISTENCE_STORAGE_SIZE__"
+
+  hostAliases: []
+  #  - ip: "<IP Address>"
+  #    hostnames:
+  #      - "<Hostname>"
+
+########################################################################
+#                   IDENTITY MANAGER CONFIGURATION                     #
+########################################################################
+configuration:
+  IS_ADVANCED_EDITION: __IS_ADVANCED_EDITION__
+
+  AZURE_POSTGRESQL_REQUIRED: "__AZURE_POSTGRESQL_REQUIRED__"
+
+  # Identity Vault Configuration
+  ID_VAULT_HOST: "__ID_VAULT_HOST__"
+  ID_VAULT_LDAPS_PORT: "__ID_VAULT_LDAPS_PORT__"
+  ID_VAULT_ADMIN_LDAP: "__ID_VAULT_ADMIN_LDAP__"
+  ID_VAULT_DRIVER_SET: "__ID_VAULT_DRIVER_SET__"
+  ID_VAULT_DEPLOY_CTX: "__ID_VAULT_DEPLOY_CTX__"
+  ID_VAULT_TREENAME: "__ID_VAULT_TREENAME__"
+
+  # OSP Configuration
+  INSTALL_OSP: __INSTALL_OSP__
+  OSP_CUSTOM_NAME: "__OSP_CUSTOM_NAME__"
+  USER_CONTAINER: "__USER_CONTAINER__"
+  ADMIN_CONTAINER: "__ADMIN_CONTAINER__"
+
+  # User Application Configuration
+  INSTALL_UA: __INSTALL_UA__
+  UA_ADMIN: "__UA_ADMIN__"
+  UA_WFE_DATABASE_ADMIN_USER: "__UA_WFE_DATABASE_ADMIN_USER__"
+  UA_DB_SCHEMA_FILE: "__UA_DB_SCHEMA_FILE__"
+  WFE_DB_SCHEMA_FILE: "__WFE_DB_SCHEMA_FILE__"
+  UA_CEF_AUDIT_ENABLED: "__UA_CEF_AUDIT_ENABLED__"
+  USE_EXISTING_CERT_WITH_SAN: "__USE_EXISTING_CERT_WITH_SAN__"
+  GROUP_ROOT_CONTAINER: "__GROUP_ROOT_CONTAINER__"
+  ROOT_CONTAINER: "__ROOT_CONTAINER__"
+  WFE_DB_NEW_OR_EXIST: "__WFE_DB_NEW_OR_EXIST__"
+  UA_DB_NEW_OR_EXIST: "__UA_DB_NEW_OR_EXIST__"
+  UA_WFE_DB_CREATE_OPTION: "__UA_WFE_DB_CREATE_OPTION__"
+  UA_WFE_DB_JDBC_DRIVER_JAR: "__UA_WFE_DB_JDBC_DRIVER_JAR__"
+  UA_WFE_DATABASE_USER: "__UA_WFE_DATABASE_USER__"
+  WFE_DATABASE_NAME: "__WFE_DATABASE_NAME__"
+  UA_DATABASE_NAME: "__UA_DATABASE_NAME__"
+  UA_WFE_DB_PORT: "__UA_WFE_DB_PORT__"
+  UA_WFE_DB_HOST: "__UA_WFE_DB_HOST__"
+  UA_WFE_DB_PLATFORM_OPTION: "__UA_WFE_DB_PLATFORM_OPTION__"
+  UA_WORKFLOW_ENGINE_ID: "__UA_WORKFLOW_ENGINE_ID__"
+  UA_CLUSTER_ENABLED: "__UA_CLUSTER_ENABLED__"
+  UA_DRIVER_NAME: "__UA_DRIVER_NAME__"
+  UA_CREATE_DRIVERS: "__UA_CREATE_DRIVERS__"
+
+  # ActiveMQ Configuration
+  INSTALL_ACTIVEMQ: __INSTALL_ACTIVEMQ__
+
+  # Reporting Configuration
+  INSTALL_REPORTING: __INSTALL_REPORTING__
+  FOR_SSPR_CONTAINER: "__FOR_SSPR_CONTAINER__"
+  RPT_DATABASE_PLATFORM_OPTION: "__RPT_DATABASE_PLATFORM_OPTION__"
+  RPT_DATABASE_HOST: "__RPT_DATABASE_HOST__"
+  RPT_DATABASE_PORT: "__RPT_DATABASE_PORT__"
+  RPT_DATABASE_NAME: "__RPT_DATABASE_NAME__"
+  RPT_DATABASE_USER: "__RPT_DATABASE_USER__"
+  RPT_ORACLE_DATABASE_TYPE: "__RPT_ORACLE_DATABASE_TYPE__"
+  RPT_DATABASE_JDBC_DRIVER_JAR: "__RPT_DATABASE_JDBC_DRIVER_JAR__"
+  RPT_DATABASE_CREATE_OPTION: "__RPT_DATABASE_CREATE_OPTION__"
+  RPT_DATABASE_NEW_OR_EXIST: "__RPT_DATABASE_NEW_OR_EXIST__"
+  RPT_DEFAULT_EMAIL_ADDRESS: "__RPT_DEFAULT_EMAIL_ADDRESS__"
+  RPT_SMTP_CONFIGURE: "__RPT_SMTP_CONFIGURE__"
+  RPT_ADMIN: "__RPT_ADMIN__"
+  RPT_CREATE_DRIVERS: "__RPT_CREATE_DRIVERS__"
+  RPT_SMTP_SERVER: "__RPT_SMTP_SERVER__"
+  RPT_SMTP_SERVER_PORT: "__RPT_SMTP_SERVER_PORT__"
+
+  # SSPR Configuration
+  INSTALL_SSPR: __INSTALL_SSPR__
+
+  # Identity Console Configuration
+  INSTALL_IDENTITY_CONSOLE: __INSTALL_IDENTITY_CONSOLE__
+  ID_CONSOLE_USE_OSP: "__ID_CONSOLE_USE_OSP__"
+
+########################################################################
+#                            OSP                                       #
+########################################################################
+osp:
+  replicaCount: __OSP_REPLICA_COUNT__
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 500m
+      memory: 2Gi
+########################################################################
+#                            identityapplications                      #
+########################################################################
+identityapplications:
+  replicaCount: __UA_REPLICA_COUNT__
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+#######################################################################
+#                            formrenderer                             #
+#######################################################################
+formrenderer:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 250m
+      memory: 2Gi
+#######################################################################
+#                            activemq                                 #
+#######################################################################
+activemq:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 250m
+      memory: 2Gi
+########################################################################
+#                            identityreporting                         #
+########################################################################
+identityreporting:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+########################################################################
+#                            sspr                                      #
+########################################################################
+sspr:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 500m
+      memory: 2Gi
+########################################################################
+#                            identityconsole                           #
+########################################################################
+identityconsole:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 500m
+      memory: 2Gi

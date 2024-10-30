@@ -1,0 +1,9 @@
+Driver           Version     Result
+                             
+JAVA_VERSION     1.8.0_332   FAIL
+OPENSSL_VERSION  1.0.2zd     PASS
+EDIR_VERSION                 FAIL
+NICI_VERSION     3.2.0.0100  PASS
+ENGINE_VERSION               FAIL
+ZOOMDB_VERSION   1.1.4       PASS
+CEF_VERSION      1.1.3       PASS

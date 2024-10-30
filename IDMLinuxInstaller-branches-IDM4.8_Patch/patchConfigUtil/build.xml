@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="patchConfigUtil" xmlns:ivy="antlib:org.apache.ivy.ant">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.8"/>
+    <property name="source" value="1.8"/>
+	<property name="ivy.jar.file" value="${basedir}/ivy/ivy.jar"/>
+    <path id="patchConfigUtil.classpath">
+        <pathelement location="bin"/>
+    </path>
+    <path id="dependencies">
+	    <path>
+	    	<fileset dir="${basedir}/lib">
+				<include name="**/*" />
+			</fileset>
+			<!--fileset dir="${basedir}/utilities/LDAP">
+				<include name="**/*" />
+			</fileset-->
+		</path>
+	</path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-project" name="build"/>
+    <target depends="init,download_dependencies" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" 
+        	srcdir="src" source="${source}" target="${target}"
+        	classpathref="dependencies">
+        </javac>
+		<jar destfile="final/patchConfigUtil.jar">
+            <fileset dir="bin" includes="**/*.class" />
+        </jar>
+    </target>
+    <!-- Get the necessary files, jars, and wars from Nexus using ivy -->	
+    <target name="download_dependencies" description="retrieve dependencies with ivy" unless="skip.download.dependencies">
+	    
+    	<path id="ivy.jar.path">
+	      <pathelement location="${ivy.jar.file}"/>
+	    </path>
+	    <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.jar.path"/>
+    	
+    	<mkdir dir="${basedir}/ivy/downloads"/>
+
+    	<property name="ivy.lib.dir" value="${basedir}/ivy/downloads"/>
+    	<ivy:settings file="${basedir}/ivy/ivysettings.xml" id="ivy.settings"/>
+    	<ivy:retrieve file="${basedir}/ivy/ivy.xml" overwriteMode="newer" sync="true" log="default" settingsRef="ivy.settings"/>
+		
+		<copy file="${basedir}/ivy/downloads/jna-4.2.2.jar" overwrite="true" failonerror="true" tofile="lib/jna.jar"/>
+		<copy file="${basedir}/ivy/downloads/jna-platform-4.2.2.jar" overwrite="true" failonerror="true" tofile="lib/jna-platform.jar"/>
+	    <copy file="${basedir}/ivy/downloads/jackson-annotations-2.7.0.jar" overwrite="true" failonerror="true" tofile="lib/jackson-annotations.jar"/>
+        <copy file="${basedir}/ivy/downloads/jackson-core-2.7.0.jar" overwrite="true" failonerror="true" tofile="lib/jackson-core.jar"/>
+        <copy file="${basedir}/ivy/downloads/jackson-databind-2.7.0.jar" overwrite="true" failonerror="true" tofile="lib/jackson-databind.jar"/>
+        <copy file="${basedir}/ivy/downloads/commons-codec-1.8.jar" overwrite="true" failonerror="true" tofile="lib/commons-codec.jar"/>
+        <copy file="${basedir}/ivy/downloads/commons-logging-1.1.1.jar" overwrite="true" failonerror="true" tofile="lib/commons-logging.jar"/>
+        <copy file="${basedir}/ivy/downloads/commons-lang3-3.3.2.jar" overwrite="true" failonerror="true" tofile="lib/commons-lang3.jar"/>
+        <copy file="${basedir}/ivy/downloads/commons-lang-2.6.jar" overwrite="true" failonerror="true" tofile="lib/commons-lang.jar"/>
+        <copy file="${basedir}/ivy/downloads/commons-configuration-1.8.jar" overwrite="true" failonerror="true" tofile="lib/commons-configuration.jar"/>
+        <copy file="${basedir}/ivy/downloads/commons-io-2.4.jar" overwrite="true" failonerror="true" tofile="lib/commons-io.jar"/>		
+     </target>
+</project>

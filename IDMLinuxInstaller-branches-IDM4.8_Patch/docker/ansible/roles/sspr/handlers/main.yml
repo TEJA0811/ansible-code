@@ -1,0 +1,14 @@
+---
+# handlers file for osp_use
+
+- name : Pull SSPR image
+  debug :
+    msg : SSPR image is pulled successfully
+
+- name : Deploy SSPR Container
+  debug :
+    msg : SSPR Container deployed successfully
+
+- name : SSPR_silent.properties file copied and loaded
+  debug :
+    msg : SSPR is copied and loaded with silent.properties file

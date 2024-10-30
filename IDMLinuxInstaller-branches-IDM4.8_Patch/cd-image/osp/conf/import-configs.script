@@ -1,0 +1,2 @@
+# Import base data
+import-external NODE "/opt/netiq/idm/apps/osp/conf/global.properties"

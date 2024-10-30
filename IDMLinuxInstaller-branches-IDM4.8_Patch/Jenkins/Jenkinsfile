@@ -1,0 +1,270 @@
+def RELEASE = "4.8_Patch"
+def VERSION = "4.8.8"
+def BUILD_NUMBER = "$BUILD_NUMBER"
+
+pipeline
+{
+    agent none
+    options
+    {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+    }
+triggers
+{
+    cron '30 6 * * *'    
+}
+
+stages
+{
+    stage("IDM Linux ISO")
+    {
+        agent { label 'master'}
+        options { skipDefaultCheckout() }
+        stages
+        {
+            stage("SCM checkout")
+            {
+                steps
+                {
+                    cleanWs()
+                    checkout scm
+                    stash includes: 'docker/', name: 'docker'
+                    stash includes: 'config/', name: 'config'
+                    stash includes: 'Linux_Regression_Suite/', name: 'testsuite'
+                }
+            }
+            stage("Packaging part")
+            {
+                steps
+                {
+                    copyArtifacts filter: 'IDM_Framework_4.8.zip', fingerprintArtifacts: true, projectName: 'IDM4.8_Patch/Engine/idm-cdimage_IDM4.8_Patch', selector: lastSuccessful(), target: 'artifacts'
+                    copyArtifacts filter: '3rdParty_Jars.zip', fingerprintArtifacts: true, projectName: 'IDM_Trunk/Install/3rdParty_Jars_trunk', selector: lastSuccessful(), target: 'artifacts'
+                    copyArtifacts filter: 'dist/lib/idm_install_utils.jar', fingerprintArtifacts: true, projectName: 'IDM4.8_Patch/Engine/common_java_utils', selector: lastSuccessful(), target: 'artifacts'
+                    copyArtifacts filter: 'final/netiq-tomcatconfig-*.noarch.rpm', fingerprintArtifacts: true, projectName: 'CommonPackages/Common_Linux_RPM/tomcatconfig-Linux_IDM4.8_Patch', selector: lastSuccessful(), target: 'artifacts'
+                    copyArtifacts filter: 'Identity_Manager_Linux_LightWeight_Designer.tar.gz', fingerprintArtifacts: true, projectName: 'Designer/Designer_4.8_Patches/designer_cdimage_linux_LightWeight_4.8.0_Update', selector: lastSuccessful(), target: 'artifacts'
+                    sh "./Jenkins/build.sh"
+                }
+            }               
+            stage("Archive artifacts")
+            {
+                steps
+                {
+                    archiveArtifacts artifacts: "Identity_Manager_${VERSION}_Linux.iso, Identity_Manager_${VERSION}_Linux.iso.md5, Identity_Manager_${VERSION}_Linux.iso.sha256sum",  fingerprint: true, onlyIfSuccessful: true
+                    stash includes: "Identity_Manager_${VERSION}_Linux.iso", name: 'iso'
+                    stash includes: "Identity_Manager_${VERSION}_Linux.iso.md5", name: 'iso_md5sum'
+                }
+            }        
+     }
+
+    }
+
+stage("Pulling latest ISO-staging")
+{
+    agent { label "Ansible-controller-idm" }
+    options { skipDefaultCheckout() }
+    steps
+    {
+        cleanWs()
+        unstash 'testsuite'
+        unstash 'iso'
+        unstash 'iso_md5sum'
+        sh "rm -rf /root/tmp/{*.iso,*.md5}"
+        sh "cp -r Identity_Manager_${VERSION}_Linux.iso /root/tmp"
+        sh "cp -r Identity_Manager_${VERSION}_Linux.iso.md5 /root/tmp"
+        sh "Linux_Regression_Suite/initial_setup.sh"
+    }
+}
+
+stage("Container build and IDM test execution")
+{
+    parallel
+    {
+        stage("Container build")
+        {
+            agent { label "iam-cm-docker-os" }
+            options { skipDefaultCheckout() }
+            steps
+            {
+		cleanWs()
+		checkout scm
+                unstash 'iso'
+                unstash 'iso_md5sum'
+                copyArtifacts filter: '*.zip', fingerprintArtifacts: true, projectName: 'IDM4.8_Patch/Engine/IDM_docker_Tools_IDM4.8_Patch', selector: lastSuccessful(), target: 'artifacts'
+                sh "./config/build_docker.sh ${BUILD_NUMBER}"
+                stash includes: "docker/Identity_Manager_4.8.8_Containers/docker-images/", name: 'docker-images'
+                archiveArtifacts artifacts: "*_log.txt, Identity_Manager_${VERSION}_Containers.tar.gz",  fingerprint: true, onlyIfSuccessful: true
+            }
+        }
+        stage("Engine staging and validation")
+        {
+            agent { label 'Ansible-controller-idm'}
+            options { skipDefaultCheckout() }
+            steps
+            {
+                cleanWs()
+                unstash 'testsuite'
+                sh 'Linux_Regression_Suite/stage1_engine_staging.sh'
+                sh 'Linux_Regression_Suite/stage1_engine_validation.sh'
+            }
+        }
+        stage("Drivers staging and validation ")
+        {
+            agent { label 'Ansible-controller-idm' }
+            options { skipDefaultCheckout() }
+            steps
+            {
+                cleanWs()
+                unstash 'testsuite'
+                sh 'Linux_Regression_Suite/stage2_driver_staging.sh'
+                sh 'Linux_Regression_Suite/stage2_driver_validation.sh'
+            }
+        }
+        stage("Remote Loader staging and validation")
+        {
+            agent { label "Ansible-controller-idm" }
+            options { skipDefaultCheckout() }
+            steps
+            {
+		cleanWs()
+                unstash 'testsuite'
+                sh 'Linux_Regression_Suite/stage3_rl_staging.sh'
+                sh 'Linux_Regression_Suite/stage3_rl_validation.sh'     
+            }
+        }
+        //commenting out Fan Out Agent stage as it need changes from Shanmukh and team 
+        /*stage("Fan Out Agent staging and validation")
+        {
+            agent { label "Ansible-controller-idm" }
+            options { skipDefaultCheckout() }
+            steps
+            {
+                cleanWs()
+                unstash 'testsuite'
+                sh 'Linux_Regression_Suite/stage4_foa_staging.sh' 
+                sh 'Linux_Regression_Suite/stage4_foa_validation.sh' 
+            }
+        }*/
+        stage("Identity Console staging and validation")
+        {
+            agent { label "Ansible-controller-idm" }
+            options { skipDefaultCheckout() }
+            steps
+            {
+                cleanWs()
+                unstash 'testsuite'
+                sh 'Linux_Regression_Suite/stage5_idc_staging.sh'
+                sh 'Linux_Regression_Suite/stage5_idc_validation.sh' 
+            }
+        }
+        stage("Reporting staging and validation")
+        {
+            agent { label "Ansible-controller-idm" }
+            options { skipDefaultCheckout() }
+            steps
+            {
+                cleanWs()
+                unstash 'testsuite'
+                sh 'Linux_Regression_Suite/stage6_rpt_staging.sh'
+                sh 'Linux_Regression_Suite/stage6_rpt_validation.sh'
+            }
+        }
+        
+    }
+}
+
+stage("Container validation suite")
+{
+    parallel
+    {
+        stage("Container build validation")
+        {
+            agent { label 'master'}
+            options { skipDefaultCheckout() }
+            steps
+            {  
+            echo 'Container build validation in progress'
+            }
+        }
+
+        stage("Container Trivy Scanning")
+        {
+            agent { label 'iam-cm-docker-os'}
+            options { skipDefaultCheckout() }
+            steps
+            {  
+            cleanWs()
+            unstash 'docker-images'
+            unstash 'config'
+//	    echo 'commented the trivy scan'
+	    sh 'curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl'
+            sh "./config/Trivy_Scan.sh"
+            archiveArtifacts artifacts: "Reports/*", fingerprint: true, followSymlinks: false
+            }
+        }
+    }
+}
+
+stage("Consolidated Report")
+    {
+        agent { label 'Ansible-controller-idm'}
+        options { skipDefaultCheckout() }
+        steps
+        {  
+            cleanWs()
+            unstash 'testsuite'
+            sh "Linux_Regression_Suite/consolidation_step.sh ${BUILD_NUMBER}"
+            archiveArtifacts artifacts: "consolidate_reports/**/*", fingerprint: true, followSymlinks: false
+        }
+    }
+}
+post
+{
+    failure
+    {
+        mail to: 'sachin.das@microfocus.com,Kiran.MB@microfocus.com',
+        subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+        body: "Hi Team,\n\nSomething went wrong with your pipeline job.\n\nPipeline Stage View : $RUN_DISPLAY_URL\n\nPlease have a check and resolve the same.\n\nThanks,\nIAM-CM Team"
+    }
+    success 
+    {
+        mail to: 'sachin.das@microfocus.com,Kiran.MB@microfocus.com',
+        subject: "[$VERSION]IDM Linux Installer ISO and Docker Build Completed along with BVT- Build $BUILD_NUMBER",
+        body: 
+"""Hi Team,
+        
+    The IDM  Linux Installer ISO build is now complete.
+    
+    $VERSION ISO build can be downloaded from $JOB_URL/$BUILD_NUMBER/artifact/
+
+    Recent changelog can be seen here $JOB_URL/changes 
+    
+    $VERSION Docker builds can be downloaded from,
+
+    OSP                   : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/osp:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/osp:$BUILD_NUMBER
+    identityapplication   : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/identityapplication:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/identityapplication:$BUILD_NUMBER
+    identityreporting     : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/identityreporting:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-/identityreporting:$BUILD_NUMBER
+    identityengine        : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/identityengine:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/identityengine:$BUILD_NUMBER
+    activemq              : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/activemq:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/activemq:$BUILD_NUMBER
+    formrenderer          : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/formrenderer:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/formrenderer:$BUILD_NUMBER
+    fanoutagent           : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/fanoutagent:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/fanoutagent:$BUILD_NUMBER
+    remoteloader          : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/remoteloader:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/remoteloader:$BUILD_NUMBER
+    postgres              : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/postgres/postgres:12.15
+    identityutils         : docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/identityutils:latest or docker pull sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/identityutils:$BUILD_NUMBER
+    idm_conf_generator    : sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/idm_conf_generator:latest or sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/idm_conf_generator:$BUILD_NUMBER
+    coredns               : sec-idm-docker.btpartifactory.swinfra.net/iam-cm/idm-$VERSION/coredns/coredns:1.8.0
+
+    The container tarball can be downloaded from,
+
+    $JOB_URL/$BUILD_NUMBER/artifact/Identity_Manager_${VERSION}_Containers.tar.gz
+        
+    Pipeline Stage View : $RUN_DISPLAY_URL
+
+    BVT Reports can be seen from $JOB_URL/$BUILD_NUMBER/artifact/consolidate_reports/
+                
+Thanks,
+IAM-CM Team"""
+    }
+}
+
+}

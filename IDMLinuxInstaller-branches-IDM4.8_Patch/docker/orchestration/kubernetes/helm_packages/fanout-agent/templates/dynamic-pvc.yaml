@@ -1,0 +1,18 @@
+{{- if not .Values.global.persistence.existingClaim  -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-fanout-agent-data-dynamic-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.global.persistence.dynamicClaim.storageSize }}
+  storageClassName: {{ .Values.global.persistence.dynamicClaim.storageClassName }}
+  {{- with .Values.global.persistence.dynamicClaim.selector }}
+  selector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

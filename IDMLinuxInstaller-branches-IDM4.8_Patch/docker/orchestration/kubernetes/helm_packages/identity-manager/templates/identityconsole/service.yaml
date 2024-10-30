@@ -1,0 +1,21 @@
+{{- if (include "identity-manager.identityconsole.deploy" .) }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "identity-manager.identityconsole.name" . }}
+  annotations:
+    {{- toYaml .Values.identityconsole.service.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.identityconsole.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.identityconsole.service.type }}
+  ports:
+    - port: {{ .Values.identityconsole.service.ports.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "identity-manager.identityconsole.selectorLabels" . | nindent 4 }}
+
+{{- end }}

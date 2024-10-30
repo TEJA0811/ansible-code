@@ -1,0 +1,46 @@
+---
+# tasks file for revert_snapshots
+- name: "Stop the VMs"
+  vmware_guest_powerstate:
+    hostname: "{{ esxi_hostname }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+#    folder: "{{esxi_folder}}"
+    name: "{{ item.vm_name }}"
+    state: powered-off
+    validate_certs: false
+  loop : "{{ vm_list }}"
+  notify: handler_for_VM_stop
+
+
+
+- name: "Revert to a snapshot"
+  vmware_guest_snapshot:
+    hostname: "{{ esxi_hostname }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    datacenter: "{{ esxi_datacenter }}"
+    folder: "{{ esxi_folder }}"
+    name: "{{ item.vm_name }}"
+    state: revert
+    snapshot_name: "{{ item.vm_snapshot_name }}"
+    validate_certs: no
+  loop : "{{ vm_list }}"
+  notify: handler_for_VM_revert
+
+- name: "Start the VMs"
+  vmware_guest_powerstate:
+    hostname: "{{ esxi_hostname }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+#    folder: "{{esxi_folder}}"
+    name: "{{ item.vm_name }}"
+    state: powered-on
+    validate_certs: false
+  loop : "{{ vm_list }}"
+  notify: handler_for_VM_start
+
+- name: "Pause for 3 mins until VMs are up"
+  pause:
+    minutes: 3
+

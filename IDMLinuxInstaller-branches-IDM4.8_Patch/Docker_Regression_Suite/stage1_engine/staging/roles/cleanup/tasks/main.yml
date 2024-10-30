@@ -1,0 +1,16 @@
+---
+# tasks file for cleanup
+
+- name: "Stop and remove all running containers"
+  shell: "docker rm -f $(docker ps -a -q)"
+  ignore_errors: true
+
+- name: "Remove all docker images"
+  shell: "docker rmi $(docker images -a -q)"
+  ignore_errors: true
+    
+- name: "Remove shared volume: {{ engine_shared_volume }}"
+  file:
+    path: "{{ engine_shared_volume }}"
+    state: absent
+    mode: '644'

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ========================================================================
+
+ (c) Copyright 2021 Micro Focus or one of its affiliates.
+
+ The only warranties for products and services of Micro Focus and its
+ affiliates and licensors ("Micro Focus") are set forth in the express
+ warranty statements accompanying such products and services. Nothing
+ herein should be construed as constituting an additional warranty. Micro
+ Focus shall not be liable for technical or editorial errors or omissions
+ contained herein. The information contained herein is subject to change
+ without notice.
+
+ Contains Confidential Information. Except as specifically indicated
+ otherwise, a valid license is required for possession, use or copying.
+ Consistent with FAR 12.211 and 12.212, Commercial Computer Software,
+ Computer Software Documentation, and Technical Data for Commercial Items
+ are licensed to the U.S. Government under vendor's standard commercial
+ license.
+
+ ========================================================================
+-->
+
+<logging xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="logging-config.xsd">
+
+    <!-- Prefix for logging messages from this logger configuration -->
+    <prefix>[RPT-CORE]</prefix>
+
+    <audit>
+        <syslog>
+            <!-- If enabled, sends Common Event Format (CEF) audit events to the specified syslog recipient -->
+            <enabled>${com.netiq.ism.audit.cef.enabled:true}</enabled>
+            <protocol>${com.netiq.ism.audit.cef.protocol:TCP}</protocol>
+            <host>${com.netiq.ism.audit.cef.host:{{ groups['slm_iga'][0] }}</host>
+            <port>${com.netiq.ism.audit.cef.port:1468}</port>
+            <cache-dir>${com.netiq.ism.audit.cef.cache-file-dir:/opt/netiq/idm/apps/tomcat/}</cache-dir>
+            <cache-file>idm-rpt.txt</cache-file>
+            <keystore-file>${com.netiq.idm.osp.ssl-keystore.file:/tmp/keystore.jks}</keystore-file>
+            <keystore-password>${com.netiq.idm.osp.ssl-keystore.pwd:changeit}</keystore-password>
+            <keystore-type>${com.netiq.idm.osp.ssl-keystore.type:JKS}</keystore-type>
+            <!-- When logging REST services, select whether to include REQUEST, RESPONSE, ALL (both), or ID_ONLY (neither) -->
+            <httpAuditData>${com.netiq.idm.audit.httpAuditData:ID_ONLY}</httpAuditData>
+            <!-- Check whether TLS certificates have expired -->
+            <check-tls-cert-exp>${com.netiq.iac.tls.checkCertificateExpiration:true}</check-tls-cert-exp>
+        </syslog>
+        <cef-to-file>
+            <!-- If enabled, writes CEF audit events to the specified file -->
+            <enabled>${com.netiq.ism.audit.cef.enabled:false}</enabled>
+            <directory>${com.netiq.iac.log.output.dir:/tmp}</directory>
+            <filename-prefix>idmrptcore-server-cef.</filename-prefix>
+            <filename-suffix>.log</filename-suffix>
+            <!-- When logging REST services, select whether to include REQUEST, RESPONSE, ALL (both), or ID_ONLY (neither) -->
+            <httpAuditData>${com.netiq.idm.audit.httpAuditData:ID_ONLY}</httpAuditData>
+        </cef-to-file>
+        <server-log>
+            <!-- If enabled, sends CEF audit events to the application server (e.g. tomcat) log -->
+            <enabled>${com.netiq.ism.audit.cef.enabled:false}</enabled>
+            <httpAuditData>${com.netiq.idm.audit.httpAuditData:ID_ONLY}</httpAuditData>
+        </server-log>
+    </audit>
+
+    <!-- Logger definitions -->
+    <loggers>
+        <!-- Example of enabling TRACE level -->
+        <!--
+        <logger additivity="true" name="com.novell.soa.af" level="TRACE"/>
+        -->
+        <logger additivity="true" name="com.novell" level="INFO"/>
+        <logger additivity="true" name="com.netiq" level="INFO"/>
+
+        <!-- Audit loggers -->
+        <logger name="audit.com.novell.idm.rpt.core.server.j2ee.InitListener" additivity="false" level="INFO"/>
+        <logger name="audit.com.novell.idm.rpt.core.server.logging.audit.AuditUtil" additivity="false" level="INFO"/>
+        <logger name="audit.com.novell.idm.rpt.core.server.rest.Schedules" additivity="false" level="INFO"/>
+        <logger name="audit.com.novell.idm.rpt.core.server.rest.TemplateMetadataService" additivity="false" level="INFO"/>
+        <logger name="audit.com.novell.idm.rpt.core.server.rest.Uploader" additivity="false" level="INFO"/>
+        <logger name="audit.com.novell.idm.rpt.core.server.schedules.ReportManager" additivity="false" level="INFO"/>
+        <logger name="audit.com.novell.idm.rpt.core.server.schedules.ScheduleManager" additivity="false" level="INFO"/>
+
+    </loggers>
+
+</logging>

@@ -1,0 +1,68 @@
+version: 1
+
+#========== Add Root container ==========
+dn: o=data
+changetype: add
+o: data1
+objectClass: organization
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+nspmPasswordPolicyDN: cn=Sample Password Policy,cn=Password Policies,cn=Security
+
+#========== Add User search container ==========
+dn: ou=users,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+nspmpasswordpolicydn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+
+#========== Add Group Search root container ==========
+dn: ou=groups,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+#========== Add Admin search container ==========
+dn: ou=sa,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+nspmpasswordpolicydn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+
+#========== Add Devices container ==========
+dn: ou=devices,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+#========== Update Password Policy with nsimAssignments attribute ==========
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nsimAssignments
+nsimAssignments: o=data
+nsimAssignments: ou=users,o=data
+nsimAssignments: ou=sa,o=data
+-
+
+#========== Update Password Policy with nspmConfigurationOptions attribute ==========
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+replace: nspmConfigurationOptions
+nspmConfigurationOptions: 884
+-
+
+#========== Update Password Policy with nspmCaseSensitive attribute ==========
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nspmCaseSensitive
+nspmCaseSensitive: TRUE
+-

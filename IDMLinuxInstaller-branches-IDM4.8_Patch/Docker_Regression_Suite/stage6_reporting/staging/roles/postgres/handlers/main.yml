@@ -1,0 +1,11 @@
+---
+# handlers file for postgres
+
+- name : Pull postgres image
+  debug :
+    msg : Postgres image is pulled successfully
+
+- name: Deploy POSTGRES Container
+  debug:
+    msg: Deployment of Postgres container is completed
+

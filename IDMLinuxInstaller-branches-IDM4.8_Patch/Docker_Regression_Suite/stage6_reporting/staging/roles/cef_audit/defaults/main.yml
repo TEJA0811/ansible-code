@@ -1,0 +1,5 @@
+---
+# defaults file for cef_audit
+osp_conf: "{{ osp_shared_volume }}/osp/tomcat/conf"
+rpt_conf: "{{ rpt_shared_volume }}/reporting/tomcat/conf"
+uapp_conf: "{{ identityapps_shared_volume }}/userapp/tomcat/conf"

@@ -1,0 +1,126 @@
+---
+# tasks file for bvt_engine
+    - name: "Add nds user to Remote VM"
+      shell: |
+        useradd -p $(openssl passwd -crypt 'novell') -u 35753 -m nds
+      ignore_errors: yes
+        
+    - name: "Create Automation Directory for BVT"
+      file:
+          path: "/data/Automation"
+          state: directory
+          mode: '755'   
+          
+    - name: "Copy Version Check script to Automation Directory"
+      template:
+           src: "bvt_engine.sh"
+           dest: "/data/Automation"
+           owner: root
+           group: root
+           mode: '777'
+           
+    - name: "Assign permissions to Automation Directory"
+      shell: |
+          chown -R 35753:root /data/Automation
+          
+    - name: "Creates results Directory"
+      file:
+        path: "{{ playbook_dir}}/results_bvt"
+        state: directory
+        mode: '644'
+      delegate_to: localhost
+        
+    - name: "Run Version Check Script on BVT IDM Engine"
+      shell: docker exec -it engine-container su nds /config/Automation/bvt_engine.sh
+    
+ 
+    - name: "Fetch log files from BVT IDM Engine Server to Ansible Controller"
+      fetch:
+        src: "{{ item }}"
+        dest: "{{ playbook_dir}}/results_bvt/"
+        flat: yes
+      with_items:
+             - /data/idm/eDirectory_data/log/nds-install.log
+             - /data/idm/eDirectory_data/log/ndsd.log
+#             - /var/opt/netiq/idm/log/idminstall.log
+             - /data/idm/log/idmconfigure.log 
+             - /data/idm/log/idmupgrade.log 
+             - /data/Automation/current.txt
+             - /data/Automation/result
+             - /data/Automation/third.html
+             - /data/Automation/driver.html
+             - /data/Automation/bvt_result
+
+    - name: "Check for errors in log files"
+      shell: |
+            cd "{{ playbook_dir }}/results_bvt"
+            sh "{{ role_path }}/files/check_errors.sh"
+      delegate_to: localhost
+
+    - name: "Read Status of errors in Log files"
+      shell: |
+          cat "{{ playbook_dir}}/results_bvt/error_install_configure.log"
+      register: error_check_results
+      delegate_to: localhost
+
+    - name: "Read Versions of installed components"
+      shell: |
+          cat "{{ playbook_dir}}/results_bvt/current.txt"
+      register: version_results
+      delegate_to: localhost
+      
+    - name: "Read version check results"
+      shell: |
+          cat "{{ playbook_dir}}/results_bvt/result"
+      register: results
+      delegate_to: localhost
+      
+    - name: "Generate Driver version check html report"
+      shell: |
+          cd "{{ playbook_dir }}/results_bvt"
+          cat ./../roles/bvt_engine/files/header.html driver.html ./../roles/bvt_engine/files/footer.html > BVT_Drivers.html
+      delegate_to: localhost
+      
+    - name: "Generate third party version check html report"
+      shell: |
+          cd "{{ playbook_dir }}/results_bvt"
+          cat ./../roles/bvt_engine/files/header.html third.html ./../roles/bvt_engine/files/footer.html > BVT_ThirdPartyJars_Engine.html
+      delegate_to: localhost
+
+    - name: "Copy files for consolidation"
+      copy:
+        src: "{{ item }}"
+        dest: "{{ results_dir }}/BVT_Engine/"
+        owner: root
+        group: root
+        mode: '644'
+      delegate_to: 'localhost'
+      with_items:
+        -  "{{ playbook_dir }}/results_bvt/BVT_Drivers.html"
+        -  "{{ playbook_dir }}/results_bvt/BVT_ThirdPartyJars_Engine.html"
+        -  "{{ playbook_dir }}/results_bvt/nds-install.log"
+        -  "{{ playbook_dir }}/results_bvt/ndsd.log"
+#        -  "{{ playbook_dir }}/results_bvt/idminstall.log"
+        -  "{{ playbook_dir }}/results_bvt/idmconfigure.log"
+        -  "{{ playbook_dir }}/results_bvt/idmupgrade.log"
+        -  "{{ playbook_dir }}/results_bvt/error_install_configure.log"
+        -  "{{ playbook_dir }}/results_bvt/bvt_result"
+
+#    - name: "remove nds user"
+#      user:
+#        name: nds
+#        state: absent
+#      ignore_errors: yes
+
+    - name: "Clear temporary Files on Ansible Controller"
+      shell: |
+         cd "{{ playbook_dir }}"
+         rm -rf results_bvt
+      delegate_to: localhost
+    
+    - name: "Remove temporary directory on target server"
+      file:
+         path: "/data/Automation"
+         state: absent
+
+...

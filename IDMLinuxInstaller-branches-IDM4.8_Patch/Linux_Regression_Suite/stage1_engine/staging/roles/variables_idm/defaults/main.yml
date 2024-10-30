@@ -1,0 +1,50 @@
+---
+# ##################Temporary Location Details################################
+# # defaults file for variables_idm
+# # Location to which build is copied onto target server
+# build_dest_location: /root/tmp
+# build_src_location: /root/tmp
+
+# # Location on which build is mounted on target server
+# build_mount_location: /mnt
+
+
+# ##################IDM 4.8 Details###########################################
+# # Information about IDM48 build can be found here
+# product_version: IDM 4.8
+# #Modify the download link and other variables as per your requirement
+# idm_48_iso_url: 'http://blr-builder.labs.blr.novell.com/artifacts/Publish/IDM/IDM_4.8/IDM_4.8.0_FCS/IDM_Linux'
+# idm_48_iso_name: Identity_Manager_4.8_Linux.iso
+
+# Silent property file generated using create_silent_properties script
+# For demo purposes,silent property file is bundled in variables_idm role files directory as below.
+# For bringing up IDM, user need to just modify the inventory for all the required components.
+# IDM gets installed in 'groups['engine'] server .
+def__idmProperties_file: "{{ role_path }}/files/sample_idm.properties"
+# Properties for idm engine patching are listed below
+perform_idv_update:       "true"
+configure_eba:            "yes"
+
+# ##################IDM 4.8 Service Pack Details##############################
+# # Information about IDM48 service pack build can be found here
+# service_pack_version: IDM 4.8.6
+# #Modify the download link and other variables as per your requirement
+# service_pack_iso_url: 'http://blr-idm-jenkins.labs.blr.novell.com:8080/job/IDM4.8_Patch/job/Engine/job/IDMLinuxInstaller_IDM4.8_Patch/lastSuccessfulBuild/artifact/'
+# service_pack_iso_name: Identity_Manager_4.8.6_Linux.iso
+# #Note Below value will be automatically updated by Ansible
+# service_pack_iso_md5sum: b17fbf34b5d6f83368e5dea2daf3d30e
+
+################### Esxi credentials#########################################
+esxi_hostname: 164.99.90.76
+esxi_username: acontroller
+esxi_password: netiq@321
+esxi_datacenter: ha-datacenter
+esxi_folder: /
+#esxi_name: "ansible_node_178_161"
+vm_snapshot_name: IDM48
+#VM list
+vm_list:
+  - STAGE1_IDMENGINE
+
+...
+

@@ -1,0 +1,17 @@
+---
+# handlers file for identityapps
+
+
+- name : Load Identity Application image
+  debug :
+    msg : Identity Application image is loaded successfully
+
+- name : Deploy Identity Application Container
+  debug :
+    msg : Identity Application Container is deployed successfully
+
+- name : copy_ua_third_party_jar
+  debug :
+    msg : Copied Third party jar file to target server where Identity Applications container us being deployed
+
+

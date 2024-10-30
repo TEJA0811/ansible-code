@@ -1,0 +1,215 @@
+{{- if (include "identity-manager.identityengine.deploy" .) }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "identity-manager.identityengine.name" . }}
+  labels:
+    {{- include "identity-manager.identityengine.labels" . | nindent 4 }} 
+spec:
+  serviceName: {{ include "identity-manager.identityengine.name" . }}
+  replicas: {{ .Values.identityengine.replicaCount }} 
+  selector: 
+    matchLabels:
+      {{- include "identity-manager.identityengine.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.identityengine.podAnnotations }} 
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "identity-manager.identityengine.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- include "identity-manager.imagePullSecrets" . | nindent 8 }}
+        
+      serviceAccountName: {{ include "identity-manager.identityengine.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.identityengine.podSecurityContext | nindent 8 }} 
+      initContainers:
+        - name: init-identityengine
+
+          image: {{ include "identity-manager.identityutils.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+
+          env:
+
+            - name: ID_VAULT_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
+            {{- include "identity-manager.common.configuration.envs"  . | nindent 12 }}
+            {{- include "identity-manager.identityengine.configuration.envs" . | nindent 12 }}
+
+          command:
+              - "/bin/bash"
+              - "-c"
+              - >
+
+                {{ include "identity-manager.generate-secret-properties.command" 
+                (dict 
+                  "top" . 
+                  "secretMountFolder" "/mnt/secrets-store" 
+                  "secretPropertiesPath" "/shared/secret.properties"
+                ) | nindent 16 }}
+
+                if [[ "$ID_VAULT_HOST" == "$(hostname -f)" ]]; then export TREE_CONFIG="newtree"; else export TREE_CONFIG="existingtreeremote"; export ID_VAULT_EXISTING_SERVER="$ID_VAULT_HOST"; export ID_VAULT_EXISTING_NCP_PORT="$ID_VAULT_NCP_PORT"; export ID_VAULT_EXISTING_LDAPS_PORT="$ID_VAULT_LDAPS_PORT"; export ID_VAULT_EXISTING_CONTEXTDN="$ID_VAULT_SERVER_CONTEXT" ; export ID_VAULT_HOST="$(hostname -f)"; fi;
+
+                export ID_VAULT_SERVERNAME="$(hostname)";
+
+                env > "/shared/silent.properties";
+
+                {{ include "identity-manager.setup-tls-cert.command" 
+                (dict
+                  "top" .
+                  "tlsMountFolder" "/mnt/tls"
+                  "outputFolder" "/shared"
+                ) | nindent 16 }}                
+
+          
+          volumeMounts:
+
+            {{- include "identity-manager.secrets.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/secrets-store"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.ingress.tls.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/tls"
+            ) | nindent 12 }}
+ 
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared" 
+              "mountPath" "/shared"
+            ) | nindent 12 }}
+
+      containers:
+        - name: {{ include "identity-manager.identityengine.name" . }}
+          securityContext:
+            {{- toYaml .Values.identityengine.securityContext | nindent 12 }} 
+          image: {{ include "identity-manager.identityengine.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . }}
+
+          env:
+
+            - name: SILENT_INSTALL_FILE
+              value: /shared/silent.properties
+
+            - name: SECRET_PROPERTY_PATH
+              value: /shared/secret.properties
+
+            - name: INGRESS_TLS_CERT_PATH
+              value: /shared/tls.crt
+
+            - name: ID_VAULT_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+              
+          ports:
+            - name: ldaps-port
+              containerPort: {{ .Values.identityengine.service.ports.ldapsPort }}
+              protocol: TCP
+            - name: ldap-port
+              containerPort: {{ .Values.identityengine.service.ports.ldapPort }}
+              protocol: TCP
+            - name: ncp-port
+              containerPort: {{ .Values.identityengine.service.ports.ncpPort }}
+              protocol: TCP
+            - name: http-port
+              containerPort:  {{ .Values.identityengine.service.ports.httpPort }}
+              protocol: TCP
+            - name: https-port
+              containerPort: {{ .Values.identityengine.service.ports.httpsPort }}
+              protocol: TCP
+            - name: hlthcheck-port
+              containerPort: {{ .Values.identityengine.service.ports.healthCheckPort }}
+              protocol: TCP
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.identityengine.service.ports.healthCheckPort }}
+          resources:
+            {{- toYaml .Values.identityengine.resources | nindent 12 }}
+          volumeMounts:
+
+            - name: identityenginedata
+              mountPath: /config
+
+            {{- include "identity-manager.shared-persistent.volumeMount" 
+            (dict 
+              "mountPath" "/sharedconfig"
+              "subPath" "identityengine"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.shared.volumeMount"   
+            (dict 
+              "volumeName" "shared" 
+              "mountPath" "/shared"
+            ) | nindent 12 }}
+            
+      volumes:
+
+        {{- include "identity-manager.shared-persistent.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+        {{- include "identity-manager.secrets.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+
+        {{- include "identity-manager.ingress.tls.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+
+        {{- include "identity-manager.shared.volume" 
+        (dict 
+          "name" "shared"
+        ) | nindent 8 }}
+
+  volumeClaimTemplates:
+  - metadata:
+      name: identityenginedata
+    spec:
+      storageClassName: {{ .Values.persistence.identityengine.volumeClaimTemplate.storageClassName }} 
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: {{ .Values.persistence.identityengine.volumeClaimTemplate.storageSize }}
+      {{- with .Values.persistence.identityengine.volumeClaimTemplate.selector }}
+      selector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+ 
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityengine.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityengine.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityengine.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- end }}

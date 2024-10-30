@@ -1,0 +1,100 @@
+---
+# tasks file for postgres
+
+
+- name : Get Postgres image file stat
+  local_action: stat path="{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_postgres.tar.gz"
+  register: pgfile
+
+- name : Check for image existence in docker host
+  shell : docker images | grep postgres | grep {{postgres_marketing_major}}.{{postgres_marketing_minor}}
+  register : imagealreadyloaded
+  ignore_errors : yes
+
+- name : Copy Postgres image to docker host
+  copy :
+          src : "{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_postgres.tar.gz"
+          dest : "{{ postgres_shared_volume }}"
+  when : 
+        - pgfile.stat.exists
+        - imagealreadyloaded.rc == 1
+
+- name : To load the postgres image
+  docker_image:
+    state : present
+    name: postgres:{{postgres_marketing_major}}.{{postgres_marketing_minor}}
+    load_path: "{{postgres_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_postgres.tar.gz"
+    timeout: 3000
+    source: load
+  notify : Pull postgres image
+  when : imagealreadyloaded.rc == 1
+
+- name : Create Postgres folder if it doesn't exist on Docker host
+  file :
+    path : "{{ postgres_shared_volume }}/postgres"
+    state : directory
+    mode : '755'
+    
+
+- name : Set postgres user password as Identity Applications database administrator password
+  set_fact:
+    postgres_user_pass: "{{ UA_WFE_DATABASE_ADMIN_PWD }}"
+  when: UA_WFE_DATABASE_ADMIN_PWD is defined
+
+- name : Set postgres user password as Identity Reporting database shared password
+  set_fact:
+    postgres_user_pass: "{{ RPT_DATABASE_SHARE_PASSWORD }}"
+  when: (UA_WFE_DATABASE_ADMIN_PWD is not defined) and (RPT_DATABASE_SHARE_PASSWORD is defined)
+
+- name : Set postgres user password as default 'changeit'
+  set_fact:
+    postgres_user_pass: "changeit"
+  when: (UA_WFE_DATABASE_ADMIN_PWD is not defined) and (RPT_DATABASE_SHARE_PASSWORD is not defined)
+  
+      
+- name : Deploy Postgres Container
+  docker_container :
+    name : "{{ postgres_container_name }}"
+    image : "postgres:{{postgres_marketing_major}}.{{postgres_marketing_minor}}"
+    state: started
+    stop_timeout: 300
+    hostname : "{{ UA_WFE_DB_HOST }}"
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+        ipv4_address : "{{ postgres_container_ipaddress }}"
+    volumes :
+      - "{{ postgres_shared_volume }}:/config"
+      - "{{ postgres_shared_volume }}/postgres:/var/lib/postgresql/data"
+    ports : "{{ postgres_port_mapping | default([]) }}"
+    dns_servers : "{{ dns_list | default([]) }}"
+    env:
+      POSTGRES_PASSWORD : "{{ postgres_user_pass }}"
+  tags : deploy_postgres_container
+  notify : Deploy POSTGRES Container
+
+# Pause for 10 seconds to build app cache.
+- pause:
+    seconds : 10
+
+- name : Create new UserApplication and Workflow Databases in Postgres Server
+  shell : |
+    docker exec -it "{{ postgres_container_name }}" psql -U postgres -c "CREATE USER {{ UA_WFE_DATABASE_USER }} WITH ENCRYPTED PASSWORD '{{ UA_WFE_DATABASE_PWD }}'" 
+    docker exec -it "{{ postgres_container_name }}" psql -U postgres -c "CREATE DATABASE {{ UA_DATABASE_NAME }}"
+    docker exec -it "{{ postgres_container_name }}" psql -U postgres -c "CREATE DATABASE {{ WFE_DATABASE_NAME }}"
+    docker exec -it "{{ postgres_container_name }}" psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE {{ UA_DATABASE_NAME }} TO {{ UA_WFE_DATABASE_USER }}"
+    docker exec -it "{{ postgres_container_name }}" psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE {{ WFE_DATABASE_NAME }} TO {{ UA_WFE_DATABASE_USER }}"
+  when: (UA_WFE_DATABASE_USER is defined) and (UA_WFE_DATABASE_USER|length > 0)
+
+- name : Create new Reporting Database in Postgres Server
+  shell : |
+    docker exec -it "{{ postgres_container_name }}" psql -U postgres -c "CREATE DATABASE {{ RPT_DATABASE_NAME }}"
+    echo ""
+  when: (RPT_DATABASE_NAME is defined) and (RPT_DATABASE_NAME|length > 0)
+
+- name : Delete Postgres tarball
+  file :
+          path : "{{postgres_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_postgres.tar.gz"
+          state : absent
+          
+

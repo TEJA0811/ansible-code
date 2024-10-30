@@ -1,0 +1,93 @@
+---
+def__idmProperties_file: "{{ role_path }}/files/silent.properties"
+
+# # Major version of Postgres
+# postgres_marketing_major : "12"
+# # Minor version of Postgres
+# postgres_marketing_minor : "7"
+
+# Location of source images
+images_dir: "{{ build_src_location }}/Identity_Manager_{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}_Containers"
+
+## Container specific poperties
+#engine_container_ipaddress : "192.168.0.2"
+engine_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+engine_container_name : "engine-container"
+engine_shared_volume : "/data"
+engine_volumes :
+  - "/data:/config" 
+engine_files :
+  - "XMLPipeShim.jar"
+engine_port_mapping :
+  - "636:636"
+  - "389:389"
+  - "524:524"
+network_set: "host"
+
+
+osp_deploy : "yes"
+# osp_container_ipaddress : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+osp_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+osp_container_name : "osp-container"
+osp_shared_volume : "/data"
+osp_volumes :
+  - "/data:/config"
+osp_port_mapping :
+  - "8543:8543"
+
+
+postgres_deploy : "yes"
+# postgres_container_ipaddress : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+postgres_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+postgres_container_name : "postgresql-container"
+postgres_shared_volume : "/data"
+postgres_volumes :
+  - "/data:/config"
+postgres_port_mapping :
+  - "5432:5432"
+ 
+
+identityapps_deploy : "yes"
+# identityapps_container_ipaddress : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+identityapps_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+identityapps_container_name : "idapps-container"
+identityapps_shared_volume : "/data"
+identityapps_volumes :
+  - "/data:/config"
+identityapps_port_mapping :
+  - "18543:18543"
+ 
+
+activemq_deploy : "no"
+# activemq_container_ipaddress : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+activemq_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+activemq_container_name : "amq-container"
+activemq_shared_volume : "/data"
+activemq_volumes :
+  - "/data:/config"
+activemq_port_mapping :
+  - "8161:8161"
+  - "61616:61616"
+ 
+
+rpt_deploy : "yes"
+# rpt_container_ipaddress : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+rpt_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+rpt_container_name : "rpt-container"
+rpt_shared_volume : "/data"
+rpt_volumes :
+  - "/data:/config"
+rpt_port_mapping :
+  - "28543:28543"
+ 
+
+sspr_deploy : "yes"
+# sspr_container_ipaddress : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+sspr_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+sspr_container_name : "sspr-container"
+sspr_shared_volume : "/data"
+sspr_volumes :
+  - "/data/sspr:/config"
+sspr_port_mapping :
+  - "8443:8443"
+...

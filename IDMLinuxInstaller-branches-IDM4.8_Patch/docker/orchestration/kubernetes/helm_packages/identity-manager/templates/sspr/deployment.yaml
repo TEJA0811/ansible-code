@@ -1,0 +1,181 @@
+{{- if (include "identity-manager.sspr.deploy" .) }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "identity-manager.sspr.name" . }}
+  labels:
+    {{- include "identity-manager.sspr.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.sspr.autoscaling.enabled }}
+  replicas: {{ .Values.sspr.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "identity-manager.sspr.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.sspr.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "identity-manager.sspr.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- include "identity-manager.imagePullSecrets" . | nindent 8 }}
+      serviceAccountName: {{ include "identity-manager.sspr.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.sspr.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: configure-sspr
+          image: {{ include "identity-manager.identityutils.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+          env:
+
+            {{- include "identity-manager.configuration.envs" 
+            (dict
+              "top" .
+            ) | nindent 12 }}
+
+          command:
+              - "/bin/bash"
+              - "-c"
+              - >
+
+                until nc -z $ID_VAULT_HOST $ID_VAULT_HEALTH_CHECK_PORT > /dev/null; do echo Waiting for eDirectory service to start.; sleep 2; done;
+
+                env >> /shared-volume/silent.properties;
+
+                {{ include "identity-manager.generate-secret-properties.command" 
+                (dict 
+                  "top" . 
+                  "secretMountFolder" "/mnt/secrets-store" 
+                  "secretPropertiesPath" "/tmp/secret.properties"
+                ) | nindent 16 }}
+                
+                cat /tmp/secret.properties >> /shared-volume/silent.properties;
+
+                {{ include "identity-manager.setup-tls-cert.command" 
+                (dict
+                  "top" .
+                  "tlsMountFolder" "/mnt/tls"
+                  "outputFolder" "/shared-volume"
+                ) | nindent 16 }}
+
+          volumeMounts:
+
+          
+            {{- include "identity-manager.secrets.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/secrets-store"
+            ) | nindent 12 }}
+
+
+            {{- include "identity-manager.ingress.tls.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/tls"
+            ) | nindent 12 }}
+
+
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-volume" 
+              "mountPath" "/shared-volume"
+            ) | nindent 12 }}
+
+      containers:
+        - name: {{ include "identity-manager.sspr.name" . }}
+          securityContext:
+            {{- toYaml .Values.sspr.securityContext | nindent 12 }}
+          image: {{ include "identity-manager.sspr.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                    - "/bin/bash"
+                    - "-c"
+                    - >
+
+                      {{ include "identity-manager.execute-script" 
+                      (dict
+                        "script" (include "identity-manager.sspr.configure.script" .)
+                        "args" (list "/shared-volume/silent.properties" "/shared-volume/tls.crt")
+                      ) | nindent 22 }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.sspr.service.ports.httpPort }}
+              protocol: TCP
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+
+          resources:
+            {{- toYaml .Values.sspr.resources | nindent 12 }}
+
+          volumeMounts:
+
+            {{- include "identity-manager.shared-persistent.volumeMount" 
+            (dict 
+              "mountPath" "/config"
+              "subPath" "sspr"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-volume" 
+              "mountPath" "/shared-volume"
+            ) | nindent 12 }}
+
+      volumes:
+
+        {{- include "identity-manager.shared-persistent.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+       
+        {{- include "identity-manager.secrets.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+        {{- include "identity-manager.ingress.tls.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+ 
+        {{- include "identity-manager.shared.volume" 
+        (dict 
+          "name" "shared-volume"
+        ) | nindent 8 }}
+
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.sspr.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.sspr.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.sspr.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- end }}

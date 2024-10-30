@@ -1,0 +1,37 @@
+---
+# tasks file for xpoz_engine
+    - name: "Copy XPOZ_ENV.txt to XPOZ Server"
+      win_copy:
+         src: XPOZ_ENV.TXT
+         dest: "{{ xpoz_home_path }}\\stage4_FOA\\XPOZv61_20080728-W\\"
+         backup: yes
+  
+    - name: "Remove temporary console file(if present)"
+      win_file:
+          path: "{{ xpoz_home_path }}\\stage4_FOA\\console.txt"
+          state: absent
+
+    - name: "Run XPOZ for FOA"
+      win_shell: .\XPOZConsole.exe "{{ xpoz_home_path }}\\stage4_FOA\\Fan_Out_Agent\JDBC.env" >>"{{ xpoz_home_path }}\\stage4_FOA\\console.txt"
+      args:
+           chdir: "{{ xpoz_home_path }}\\stage4_FOA\\XPOZv61_20080728-W"
+      ignore_errors: true
+
+    - name: "Fetch files from XPOZ Server to Ansible Controller"
+      fetch:
+        src: "{{ item }}"
+        dest: "{{ results_dir }}/Regression_FOA/"
+        flat: yes
+      with_items:
+          - "{{ xpoz_home_path }}\\stage4_FOA\\console.txt"
+          - "{{ xpoz_home_path }}\\stage4_FOA\\Fan_Out_Agent\\JDBC.html"
+          - "{{ xpoz_home_path }}\\stage4_FOA\\Fan_Out_Agent\\JDBC_tc.html"
+          - "{{ xpoz_home_path }}\\stage4_FOA\\Fan_Out_Agent\\JDBC_err.html"
+
+    - name: "Register Test Results"
+      shell: |
+           dos2unix -f "{{ results_dir }}/Regression_FOA/console.txt"
+           awk '/returned: 0/{flag=1; next} /!!! STOPPED !!!/{flag=0} flag' "{{ results_dir }}/Regression_FOA/console.txt" > "{{ results_dir }}/Regression_FOA/xpoz_result"
+      delegate_to: 'localhost'
+
+...

@@ -1,0 +1,366 @@
+---
+
+########### Version details ############
+JAVA_VERSION: 11.0.19
+OPENSSL_VERSION: 1.0.2zg
+EDIR_VERSION: 9.2.9.0000
+NICI_VERSION: 3.2.0.0500
+ENGINE_VERSION: 4.8.8.0000
+ZOOMDB_VERSION: 1.1.6
+CEF_VERSION: 1.1.5
+
+########### Drivers Versions ##########
+drivers:
+  netiq-DXMLRESTAzure:
+    name: "Azure Driver"
+    version: "5.1.1"
+    summary: (NetIQ Identity Manager REST Azure Driver)
+  netiq-DXMLServiceNow:
+    name: "Service Now Driver"
+    version: "1.0.0"
+    summary: (NetIQ Identity Manager ServiceNow Driver)
+  novell-DXMLjdbc:
+    name: "JDBC Driver"
+    version: "4.2.1"
+    summary: (JDBC Driver)
+  novell-DXMLfanoutdriver:
+    name: "JDBC Fanout Driver"
+    version: "1.2.5"
+    summary: (Fanout Driver)
+  novell-DXMLadeng:
+    name: "Active Directory Driver"
+    version: "4.0.5"
+    summary: (AD Driver engine components)
+  novell-DXMLedir:
+    name: "eDir-eDir Driver"
+    version: "4.8.7"
+    summary: (NetIQ DirXML eDirectory to eDirectory Driver)
+  novell-DXMLEdirDrv:
+    name: "Bi-dir eDir Driver"
+    version: "4.0.7"
+    summary: (NetIQ Identity Manager Bi-directional Edirectory Driver)
+  novell-DXMLldap:
+    name: "LDAP Driver"
+    version: "4.2.0"
+    summary: (LDAP Driver)
+  novell-DXMLGWRest:
+    name: "GroupWise Driver"
+    version: "4.0.1"
+    summary: (NetIQ Identity Manager GroupWise Rest Driver)
+  novell-DXMLnotes:
+    name: "Notes Driver"
+    version: "4.1.2"
+    summary: (Lotus Notes Driver 4.1.2.0)
+  novell-DXMLGoogleApps:
+    name: "GoogleApps Driver"
+    version: "4.2.0"
+    summary: (GoogleApps Driver)
+  novell-DXMLebsUM:
+    name: "Oracle EBS UM Driver"
+    version: "4.0.2"
+    summary: (EBS Driver for UM)
+  novell-DXMLebsHR:
+    name: "Oracle EBS HR Driver"
+    version: "4.0.2"
+    summary: (EBS Driver for HR)
+  novell-DXMLebsTCA:
+    name: "Oracle EBS TCA Driver"
+    version: "4.0.2"
+    summary: (EBS Driver for TCA)
+  novell-DXMLpsoft:
+    name: "PeopleSoft Driver"
+    version: "5.2.4"
+    summary: (Identity Manager Driver for PeopleSoft 8)
+  novell-DXMLSForce:
+    name: "SalesForce Driver"
+    version: "4.1.0"
+    summary: (SalesForce Driver)
+  novell-DXMLsapus:
+    name: "SAP UM Driver"
+    version: "4.0.4"
+    summary: (NetIQ Identity Manager Driver for SAP User Management)
+  novell-DXMLsaphrjco:
+    name: "SAP HR Driver"
+    version: "4.0.4"
+    summary: (NetIQ DirXML SAP HR Driver for jco3)  
+  novell-DXMLsappt:
+    name: "SAP Portal Driver"
+    version: "4.0.2"
+    summary: (NetIQ Identity Manager SAP Portal UME Driver)
+  netiq-DXMLsentinel-REST:
+    name: "Sentinel Driver"
+    version: "4.0.2"
+    summary: (NetIQ Identity Manager Sentinel Rest Driver)
+  novell-DXMLjms:
+    name: "JMS Driver"
+    version: "4.0.0"
+    summary: (JMS Driver)
+  netiq-DXMLarshim:
+    name: "AccessReview Driver"
+    version: "3.0.1"
+    summary: (NetIQ Identity Manager Access Review Driver)
+  novell-DXMLdcs:
+    name: "DCS Driver"
+    version: "4.2.0"
+    summary: (NetIQ Identity Manager Driver for Data Collection Service)
+  novell-DXMLMSGway:
+    name: "MSGW Driver"
+    version: "4.2.2"
+    summary: (NetIQ Identity Manager Managed System Gateway Driver)
+  netiq-DXMLuad:
+    name: "UA Driver"
+    version: "4.8.6"
+    summary: (NetIQ Identity Manager User Application Driver)
+  netiq-DXMLrrsd:
+    name: "RRSD Driver"
+    version: "4.8.0"
+    summary: (NetIQ Identity Manager Role Resource Service Driver)
+  novell-DXMLtlmnt:
+    name: "Entitlement Driver"
+    version: "4.0.1"
+    summary: (Entitlement Service Driver)
+  novell-DXMLidprv:
+    name: "ID Provider Driver"
+    version: "4.0.0"
+    summary: (NetIQ Identity Manager ID Provider Driver)
+  novell-DXMLIGIM:
+    name: "IGIM Driver"
+    version: "1.0.1"
+    summary: (Identity Governance Integration Module)
+  novell-DXMLmtask:
+    name: "Manual Task Driver"
+    version: "4.1.0"
+    summary: (NetIQ Identity Manager Manual Task Service Driver)
+  novell-DXMLwkodr:
+    name: "Workorder Driver"
+    version: "4.0.0"
+    summary: (Work Order Driver)
+  novell-DXMLdelim:
+    name: "Delimited Text Driver"
+    version: "4.0.2"
+    summary: (NetIQ Identity Manager Delimited Text Driver)
+  netiq-DXMLRESTDrv:
+    name: "REST Driver"
+    version: "1.0.2"
+    summary: (NetIQ Identity Manager REST Driver)
+  novell-DXMLsoap:
+    name: "SOAP Driver"
+    version: "4.1.0"
+    summary: (SOAP Driver)
+  novell-DXMLBanner:
+    name: "Banner Driver"
+    version: "4.1.4"
+    summary: (Banner Driver)
+  netiq-DXMLedm:
+    name: "Entity Data Model Driver"
+    version: "1.1.2"
+    summary: (NetIQ Identity Manager Entity Data Model Driver)
+  novell-DXMLnpum:
+    name: "Account Manager Driver"
+    version: "4.5.0"
+    summary: (NetIQ DirXML Driver for Privileged Account Manager)
+  novell-DXMLbb:
+    name: "BlackBoard Driver"
+    version: "4.0.2"
+    summary: (BlackBoard Driver)
+  novell-DXMLsapbl:
+    name: "SAP Business Logic Driver"
+    version:  "3.6.2"
+    summary: (NetIQ Identity Manager Driver for SAP Business Logic)
+
+########### Third-party libraries versions ##########
+others:
+  aalto-xml-*.jar: "1.3.2"
+  activemq-all-*.jar: "5.16.5"
+  afadmin.jar: "1.0.0"
+  bcprov-jdk15on-*.jar: "	1.70.0"
+  commons-codec-*.jar: "1.15"
+  common-*.jar: "Version not found"
+  commons-io-*.jar: "2.11.0"
+  commons-lang3-*.jar: "3.12.0"
+  commons-logging-*.jar: "1.2"
+  concurrentlinkedhashmap-lru-*.jar: "Version not found"
+  eclipse-collections-*.jar: "11.1.0"
+  eclipse-collections-api-*.jar: "11.1.0"
+  eclipse-collections-forkjoin-*.jar: "11.1.0"
+  elsa-*.jar: "3.0.0.M7"
+  gson.jar: "2.9.0"
+  guava-*.jar: "31.1.0.jre"
+  guava.jar: "27.1.0.android"
+  httpclient-*.jar: "4.5.14"
+  httpcore-*.jar: "4.4.16"
+  httpmime-*.jar: "4.5.13"
+  idprovider.jar: "4.0.0.0"
+  imgscalr-lib-*.jar: "4.2"
+  jackson-annotations-*.jar: "2.13.3"
+  jackson-core-*.jar: "2.13.3"
+  jackson-databind-*.jar: "2.13.3"
+  jackson-dataformat-xml-*.jar: "2.13.3"
+  jackson-jaxrs-*.jar: "2.13.3"
+  jackson-jaxrs-base-*.jar: "2.14.1"
+  jackson-jaxrs-json-provider-*.jar: "2.14.1"
+  jackson-module-jaxb-annotations-*.jar: "2.13.3"
+  jakarta.mail-*.jar: "1.6.7"
+  javax-xml-soap-*.jar: "1.6.0"
+  javax.servlet-api-*.jar: "4.0.1"
+  javax.xml.soap-api-*.jar: "1.4.0"
+  jaxb-api-*.jar: "2.4.0-b180830.0359"
+  jaxrpc-api-*.jar: "1.1"
+  jcce-*.jar: "1.3.0"
+  jcce-oauth-*.jar: "1.3.0"
+  jersey-bundle-*.jar: "1.19.4"
+  jettison-*.jar: "1.5.4"
+  jetty-all-*.jar: "9.4.48.v20220622"
+  jms.jar: "2.0.1"
+  jnet.jar: "1.0"
+  js.jar: "1.7.7.1"
+  json-smart-*.jar: "2.4.10"
+  jsr305-*.jar: "Unable to fetch version"
+  jsr311-api-*.jar: "1.1.1"
+  jsso-prov.jar: "Unable to fetch version"
+  jsso.jar: "3.04.01.1"
+  kafka-clients-*.jar: "Unable to fetch version"
+  kotlin-stdlib-*.jar: "1.7.0-release-281\\(1.7.0\\)"
+  leveldbjni-all-*.jar: "1.8.0"
+  log4j-api-*.jar: "2.18.0"
+  log4j-core-*.jar: "2.18.0"
+  lucene-core-*.jar: "8.11.2"
+  lz4-*.jar: "1.8.0"
+  mapdb-*.jar: "3.0.9"
+  msal4j-*.jar: "1.12.0"
+  nimbus-jose-jwt-*.jar: "9.31"
+  nxsl.jar: "4.6.0.0"
+  oauth2-oidc-sdk-*.jar: "9.39"
+  opencsv-*.jar: "5.6.0"
+  saaj-api.jar: "1.2"
+  slf4j-api-*.jar: "1.7.36"
+  slf4j-log4j12-*.jar: "1.7.33"
+  slf4j-simple-*.jar: "1.7.36"
+  stax2-api-*.jar: "4.2.1"
+  wss4j-*.jar: "1.6.19"
+  xercesImpl.jar: "2.9.0"
+  xmlsec-*.jar: "3.0.0"
+  xpp3.jar: "Unable to fetch version"
+  zoomdb.jar: "1.1.6.0"
+
+########### Remote loader libraries versions ##########
+rl:
+  aalto-xml-1.2.2.jar: "1.2.2"
+  activemq-all-5.15.15.jar: "5.15.15"
+  afadmin.jar: "1.0.0"
+  bcprov-jdk15on-1.67.jar: "1.67.0"
+  commons-codec-1.6.jar: "1.6"
+  commons-httpclient.jar: "3.1"
+  commons-io-2.8.0.jar: "2.8.0"
+  dirxmlcomps.jar: "5.0"
+  ejb.jar: "2.0"
+  elsa-3.0.0-M5.jar: "3.0.0.M5"
+  gson.jar: "2.3.1"
+  guava-19.0.jar: "19.0.0"
+  guava.jar: "27.1.0.android"
+  httpclient-4.5.13.jar: "4.5.13"
+  httpcore-4.4.13.jar: "4.4.13"
+  jackson-jaxrs-1.9.13.jar: "1.9.13"
+  jackson-module-jaxb-annotations-2.6.3.jar: "2.6.3"
+  javax.mail-1.6.2.jar: "1.6.2"
+  jaxrpc-api.jar: "1.1"
+  jcce-1.3.0.jar: "1.3.0"
+  jersey-bundle-1.18.jar: "1.18.0"
+  jettison-1.4.1.jar: "1.4.1"
+  jetty-all-9.4.34.v20201102-uber.jar: "9.4.34.v20201102"
+  jnet.jar: "1.0"
+  js.jar: "1.7.7.1"
+  jsr311-api-1.1.1.jar: "1.1.1"
+  jsso.jar: "3.04.01.1"
+  leveldbjni-all-1.8.jar: "1.8.0"
+  log4j.jar: "4.2.0.GA"
+  lucene-core-7.0.1.jar: "7.0.1"
+  lz4-1.3.0.jar: "1.3.0"
+  mapdb-3.0.5.jar: "3.0.5"
+  nxsl.jar: "4.6.0.0"
+  pwdexpjob.jar: "4.5.1.0"
+  saaj-api.jar: "1.2"
+  servlet-api-3.1.jar: "3.1.0"
+  slf4j-api-1.7.26.jar: "1.7.26"
+  slf4j-simple-1.7.13.jar: "1.7.13"
+  stax2-api-4.2.1.jar: "4.2.1"
+  wss4j-1.6.6.jar: "1.6.6"
+  xercesImpl.jar: "2.9.0"
+  xmlsec.jar: "1.2.1"
+  zoomdb.jar: "1.1.5.0"
+
+########### FanOut Agent libraries versions ##########
+foa:
+#  CommonDriverShim.jar: "4.0.0.0"
+  FanoutAgent.jar: "1.2.8.0000"
+#  IDMCEFProcessor.jar: ""
+#  JDBCConfig.jar: ""
+#  JDBCShim.jar: ""
+#  JDBCUtil.jar: ""  
+  activemq-all-*.jar: "5.16.5"
+  dirxml.jar: "4.8.6.0000"
+  dirxml_misc.jar: "4.8.6.0000"
+  dirxml_remote.jar: "4.8.6.0000"
+  elsa-*.jar: "3.0.0.M7"
+  javax.servlet-api-*.jar: "4.0.1"
+  jclient.jar: "1.00"
+  jersey-bundle-*.jar: "1.19.4"
+  jettison-*.jar: "1.5.0"
+  jackson-jaxrs-base-*.jar: "2.13.3"
+  jetty-all-*.jar: "9.4.48.v20220622"
+  json-simple-*.jar: "1.1.1"
+  jsr311-api-*.jar: "1.1.1"
+#  ldap.jar:""
+  nxsl.jar: "4.6.0.0"
+  opencsv-*.jar: "5.6.0"
+  xp-*.jar: "1.0.0"
+  zoomdb.jar: "1.1.5.0"
+# /opt/netiq/idm/jlogger/lib/ has log4j jars need to discuss if they also have to be tracked 
+
+########### Identity Reporting libraries versions ##########
+rpt:
+  MSGatewayCommon.jar: "4.2.2.0"
+  aalto-xml-*.jar: "1.3.2"
+  activemq-all-*.jar: "5.16.5"
+  afadmin.jar: "1.0.0" 
+  bcprov-jdk15on-*.jar: "1.70.0"
+  dcsshim.jar: "4.2.0.0"
+  eclipse-collections-*.jar: "11.1.0"
+  ejb.jar: "3.0"
+  elsa-*.jar: "3.0.0.M7"
+  gson.jar: "2.3.1"
+  guava-*.jar: "31.1.0.jre"
+  guava.jar: "27.1.0.android"
+  httpclient-*.jar: "4.5.13"
+  idprovider.jar: "4.0.0.0"
+  jersey-bundle-*.jar: "3.0.4"
+  jettison-*.jar: "1.5.0"
+  jetty-all-*-uber.jar: "9.4.46.v20220331"
+  js.jar: "1.7.7.1"
+  jsso.jar: "3.04.01.1"
+  log4j.jar: "4.2.0.GA"
+  lucene-core-*.jar: "8.11.2"
+  lz4-*.jar: "1.8.0"
+  mapdb-*.jar: "3.0.8"
+  nxsl.jar: "4.6.0.0"
+  pwdexpjob.jar: "4.5.1.0"
+  saaj-api.jar: "1.3.5"
+  sentinel-client-base-java.jar: "Sentinel~8.2~0.0~5060~2018-06-14~Sentinel"
+  sentinel-client-base.jar: "Sentinel~8.2~0.0~5060~2018-06-14~Sentinel"
+  sentinel-crypto.jar: "Sentinel~8.2~0.0~5060~2018-06-14~Sentinel"
+  servlet-api-*.jar: "4.0.1"
+  stax2-api-*.jar: "4.2.1"
+  xmlsec.jar: "3.0.0"
+  zoomdb.jar: "1.1.5.0"
+
+########### Identity Console Versions ##########
+idconsole:
+  novell-libstdc*: "5.3.1+r233831"
+  netiq-openssl: "1.0.2zf"
+  nici64*: "3.2.0.0300"
+  novell-NDSbase: "9.2.7.0000"
+  novell-npkit: "9.2.7.0000"
+  novell-npkiapi: "9.2.7.0000"
+  identityconsole: "1.6.0.0000"
+  edirapi: "1.6.0.0000"
+...

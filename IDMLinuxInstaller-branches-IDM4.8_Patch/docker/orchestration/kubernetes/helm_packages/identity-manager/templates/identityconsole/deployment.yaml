@@ -1,0 +1,205 @@
+{{- if (include "identity-manager.identityconsole.deploy" .) }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "identity-manager.identityconsole.name" . }}
+  labels:
+    {{- include "identity-manager.identityconsole.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.identityconsole.autoscaling.enabled }}
+  replicas: {{ .Values.identityconsole.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "identity-manager.identityconsole.selectorLabels" . | nindent 6 }}
+  template: 
+    metadata:
+      {{- with .Values.identityconsole.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "identity-manager.identityconsole.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- include "identity-manager.imagePullSecrets" . | nindent 8 }}
+      serviceAccountName: {{ include "identity-manager.identityconsole.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.identityconsole.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: setup-data
+          image: {{ include "identity-manager.identityutils.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+          env:
+
+            {{- include "identity-manager.configuration.envs" 
+            (dict
+              "top" .
+            ) | nindent 12 }}
+
+          command:
+              - "/bin/bash"
+              - "-c"
+              - >
+
+                until nc -z $ID_VAULT_HOST $ID_VAULT_HEALTH_CHECK_PORT > /dev/null; do echo Waiting for eDirectory service to start.; sleep 2; done;
+
+                echo "Generating secret.properties";
+                {{- include "identity-manager.generate-secret-properties.command" 
+                (dict 
+                  "top" . 
+                  "secretMountFolder" "/mnt/secrets-store" 
+                  "secretPropertiesPath" "/secret.properties"
+                ) | nindent 16 }}
+
+                echo "Adding keystore password to secret properties";
+                {{- include "identity-manager.add-keystore-pwd-to-secret-properties.command" 
+                (dict 
+                  "top" .
+                  "secretMountFolder" "/mnt/key-store-pwd" 
+                  "secretPropertiesPath" "/secret.properties"
+                ) | nindent 16 }}
+                
+                echo "Setting up TLS certificate and key";
+                {{- include "identity-manager.setup-tls-cert-and-key.command" 
+                (dict
+                  "top" .
+                  "tlsMountFolder" "/mnt/tls"
+                  "outputFolder" "/tmp"
+                ) | nindent 16 }}
+                
+                echo "Generating eDirAPI configuration"; 
+                {{- include "identity-manager.identityconsole.generate-edirapi-conf.command" 
+                (dict 
+                  "top" . 
+                  "edirAPIConfPath" "/shared-data/edirapi.conf"
+                ) | nindent 16 }}
+
+                echo "Configuring Identity Console";            
+                {{- include "identity-manager.execute-script" 
+                (dict
+                  "script" (include "identity-manager.identityconsole.configure.script" .)
+                  "args" (list "/tmp/tls.crt" "/tmp/tls.key" "/secret.properties" "/shared-data/edirapi.conf" "/shared-data")
+                ) | nindent 16 }}
+
+                
+
+
+          volumeMounts:
+          
+            {{- include "identity-manager.secrets.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/secrets-store"
+            ) | nindent 12 }}
+
+
+            {{- include "identity-manager.key-store-pwd.volumeMount" 
+            (dict 
+              "top" .
+              "mountPath" "/mnt/key-store-pwd"
+            ) | nindent 12 }}
+ 
+            {{- include "identity-manager.ingress.tls.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/tls"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-data" 
+              "mountPath" "/shared-data"
+            ) | nindent 12 }}
+
+      containers:
+        - name: {{ include "identity-manager.identityconsole.name" . }}
+          securityContext:
+            {{- toYaml .Values.identityconsole.securityContext | nindent 12 }}
+          image: {{ include "identity-manager.identityconsole.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+          ports:
+            - name: http
+              containerPort: {{ .Values.identityconsole.service.ports.httpPort }}
+              protocol: TCP
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            exec:
+#              command:
+#              - cat 
+#              - /opt/netiq/idm/apps/tomcat/logs/catalina.out
+#            failureThreshold: 180
+#            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.identityconsole.resources | nindent 12 }}
+          volumeMounts:
+
+            {{- include "identity-manager.shared-persistent.volumeMount" 
+            (dict 
+              "mountPath" "/config"
+              "subPath" "identityconsole"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-data" 
+              "mountPath" "/config/data"
+            ) | nindent 12 }}
+            
+      volumes:
+
+        {{- include "identity-manager.shared-persistent.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+       
+        {{- include "identity-manager.secrets.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+
+        {{- include "identity-manager.key-store-pwd.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+        {{- include "identity-manager.ingress.tls.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+
+        {{- include "identity-manager.shared.volume" 
+        (dict 
+          "name" "shared-data"
+        ) | nindent 8 }}
+        
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityconsole.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityconsole.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityconsole.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- end }}

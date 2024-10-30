@@ -1,0 +1,14 @@
+//VARIABLES
+SRV1=IDVAULTSERVER
+Remote=false
+AdminPassword=novell
+TreeOrg=OU=servers.O=system.T=S2-DRIVER-CONTAINER_TREE
+ServerAddress=10.71.35.183
+ftpServerAddr=10.71.35.183
+FTPUser=nds
+FTPPassword=novell
+eDirLDAPPort=389
+InputDirectory=/data/idm/input
+OutputDirectory=/data/idm/output
+containerInputDir=/config/idm/input
+containerOutputDir=/config/idm/output

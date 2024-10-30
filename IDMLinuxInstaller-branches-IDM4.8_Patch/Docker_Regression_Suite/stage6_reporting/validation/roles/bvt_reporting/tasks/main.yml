@@ -1,0 +1,78 @@
+---
+# tasks file for bvt_engine
+
+    - name: "Create Automation Directory for BVT"
+      file:
+          path: "/data/Automation"
+          state: directory
+          owner: messagebus
+          group: render
+          mode: '644'
+          
+    - name: "Copy Version Check script to Automation Directory"
+      template:
+           src: "bvt_reporting.sh"
+           dest: "/data/Automation"
+           owner: messagebus
+           group: render
+           mode: '777'
+    
+    # - name: "Assign permissions to Automation Directory"
+    #   shell: |
+    #       chown -R messagebus:render /data/Automation
+
+    - name: "Creates results Directory"
+      file:
+        path: "{{ playbook_dir}}/results_bvt"
+        state: directory
+        mode: '644'   
+
+    - name: "Run Version Check Script on BVT IDM Engine"
+      shell: "docker exec -it engine-container {{ Automation_dir }}/bvt_reporting.sh"
+ 
+    - name: "Fetch log files from BVT IDM Engine Server to Ansible Controller"
+      fetch:
+        src: "{{ item }}"
+        dest: "{{ playbook_dir}}/results_bvt/"
+        flat: yes
+      with_items:
+             - /data/Automation/result
+             - /data/Automation/reporting.html
+             - /data/Automation/bvt_result
+      
+    - name: "Read version check results"
+      shell: |
+          cat "{{ playbook_dir}}/results_bvt/result"
+      register: results
+      delegate_to: localhost
+      
+    - name: "Generate Identity Reporting jars version check html report"
+      shell: |
+          cd "{{ playbook_dir }}/results_bvt"
+          cat ./../roles/bvt_reporting/files/header.html reporting.html ./../roles/bvt_reporting/files/footer.html > BVT_Reporting.html
+      delegate_to: localhost
+
+    - name: "Copy files for consolidation"
+      copy:
+        src: "{{ item }}"
+        dest: "{{ results_dir }}/BVT_Reporting/"
+        owner: root
+        group: root
+        mode: '644'
+      delegate_to: 'localhost'
+      with_items:
+        -  "{{ playbook_dir }}/results_bvt/BVT_Reporting.html"
+        -  "{{ playbook_dir }}/results_bvt/bvt_result"
+    
+    - name: "Clear temporary Files on Ansible Controller"
+      shell: |
+         cd "{{ playbook_dir }}"
+         rm -rf results_bvt
+      delegate_to: localhost
+    
+    - name: "Remove temporary directory on target server"
+      file:
+          path: "/data/Automation"
+          state: absent
+
+...

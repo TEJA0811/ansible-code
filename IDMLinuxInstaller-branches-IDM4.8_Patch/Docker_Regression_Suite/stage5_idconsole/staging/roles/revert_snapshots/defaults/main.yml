@@ -1,0 +1,16 @@
+---
+# defaults file for revert_snapshots
+
+esxi_hostname: 164.99.90.76
+esxi_username: acontroller
+esxi_password: netiq@321
+esxi_datacenter: ha-datacenter
+esxi_folder: /
+ 
+vm_list:
+    - vm_name: IDMQA-SLES15SP2-IDC-35.84
+      vm_snapshot_name: ansible_docker
+    - vm_name: SLES15SP2-IDM1-90.56
+      vm_snapshot_name: ansible_cicd
+    - vm_name: SLES15SP2-IDM2-90.90
+      vm_snapshot_name: ansible_cicd

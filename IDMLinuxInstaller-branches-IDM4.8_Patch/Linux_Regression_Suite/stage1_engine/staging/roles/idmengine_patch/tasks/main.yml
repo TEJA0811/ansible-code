@@ -1,0 +1,69 @@
+---
+# tasks file for idmengine_patch
+    - name: "Unmount the mount location if mounted"
+      mount:
+         path: "{{ build_mount_location }}"
+         state: unmounted
+      notify: handler_for_message - umount_iso_if_present
+      tags: umount_iso_if_present
+
+    - name: 'Create Temporary Directory on Target Server for ansible'
+      file:
+          path: "{{ build_dest_location }}"
+          state: directory
+          mode: '644'
+      notify: handler_for_message - temp_dir_target
+      tags: temp_dir_target
+
+    - name: "Copy local {{ service_pack_iso_name }} build to Target Server"
+      copy:
+          src: "{{ build_src_location }}/{{ service_pack_iso_name }}"
+          dest: "{{ build_dest_location }}/{{ service_pack_iso_name }}"
+      notify: handler_for_message - copy_iso_to_target
+      tags: copy_iso_to_target
+
+    - name: "Mount {{ service_pack_iso_name }} on Target Server "
+      mount:
+         path: "{{ build_mount_location }}"
+         src: "{{build_dest_location}}/{{ service_pack_iso_name }}"
+         state: mounted
+         fstype: iso9660
+      notify: handler_for_message - build_mount
+      tags: build_mount
+
+    - name: "Copy Silent Patching Properties to Target Server"
+      template:
+           src: "{{ silent_prop_patch }}"
+           dest: "{{ build_dest_location}}"
+           owner: root
+           group: root
+           mode: '644'
+      notify: handler_for_message - copy_silent_prop_patch
+      tags: copy_silent_prop_patch
+
+    - name: "Perform IDV Upgrade"
+      block:
+         - name: "Run Un-attended upgrade of IDV"
+           shell: |
+               cd "{{ build_mount_location }}/IDVault/setup"
+               bash nds-install -u
+         - name: "Setting the environment for IDV"
+           shell: . /opt/novell/eDirectory/bin/ndspath
+
+         - name: "Perform NDSCONFIG upgrade for IDV"
+           shell: ndsconfig upgrade -a "{{ ID_VAULT_ADMIN }}" -w "{{ ID_VAULT_PASSWORD }}" --configure-eba-now "{{ configure_eba | string }}"
+           notify: handler_for_message - idv_upgrade
+      when: perform_idv_update == 'true'
+      tags: idv_upgrade
+
+    - name: "Update IDM Engine on Target Server"
+      shell: |
+           cd "{{ build_mount_location }}"
+           ./install.sh -ssc -s -f "{{ build_dest_location }}/silent_ansible_patch_engine.properties"
+      notify:
+           - handler_for_message - update_engine
+      tags: update_engine
+
+    - meta: flush_handlers
+...
+

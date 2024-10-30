@@ -1,0 +1,11 @@
+---
+# handlers file for reporting
+
+- name : Load Identity Reporting image
+  debug :
+    msg : Identity Reporting image is loaded successfully
+
+- name : Deploy Identity Reporting Container
+  debug :
+    msg : Identity Reporting Container is deployed successfully
+

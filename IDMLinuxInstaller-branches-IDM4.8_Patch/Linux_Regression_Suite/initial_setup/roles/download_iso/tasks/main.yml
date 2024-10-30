@@ -1,0 +1,92 @@
+---
+# tasks file for download_iso
+
+- name: 'Create Temporary Directory on Source Server for ansible'
+  file:
+      path: "{{ build_src_location }}"
+      state: directory
+      mode: '644'
+  delegate_to: 'localhost'
+  notify: handler_for_message - temp_dir_src
+  tags: temp_dir_src
+
+
+- name: 'Check if {{ idm_48_iso_name }} exists locally'
+  stat:
+      path: '{{ build_src_location }}/{{ idm_48_iso_name }}'
+  delegate_to: 'localhost'
+  register: register_local_iso
+  notify: handler_for_message - check_iso_locally
+  tags: check_iso_locally
+
+- name: "Download {{ product_version }} build locally"
+  get_url:
+      dest: "{{ build_src_location }}/{{ idm_48_iso_name }}"
+      url: "{{ idm_48_iso_url }}/{{ idm_48_iso_name }}"
+  delegate_to: 'localhost'
+  notify: handler_for_message - build_download
+  when: not register_local_iso.stat.exists
+  tags: build_download
+
+## Download service pack
+#- name: "Download md5sum File"
+#  get_url:
+#      dest: "{{ role_path }}/files/"
+#      url: "{{ service_pack_iso_url }}/{{ service_pack_iso_name }}.md5"
+#  delegate_to: localhost
+#
+#- name: "Read md5sum of the build to be downloaded"
+#  shell: |
+#      cat "{{ role_path }}/files/{{ service_pack_iso_name }}.md5" | awk '{ print $1 }'
+#  register: md5sum_latest
+#  delegate_to: localhost
+#
+#- name: "Update md5sum value to latest"
+#  lineinfile:
+#        path:  "{{ playbook_dir }}/../variables/global.yml"
+#        regexp: '^service_pack_iso_md5sum:'
+#        line: 'service_pack_iso_md5sum: {{md5sum_latest.stdout}}'
+#  when: md5sum_latest.stdout != service_pack_iso_md5sum
+#  delegate_to: localhost
+#
+## - name: "Update md5sum value to latest"
+##   lineinfile:
+##         path:  "{{ playbook_dir }}/roles/download_iso/defaults/main.yml"
+##         regexp: '^service_pack_iso_md5sum:'
+##         line: 'service_pack_iso_md5sum: {{md5sum_latest.stdout}}'
+##   when: md5sum_latest.stdout != service_pack_iso_md5sum
+##   delegate_to: localhost
+#
+#- name: "Remove Previous ISO if md5sum don't match"
+#  file:
+#    path:  "{{ build_src_location }}/{{ service_pack_iso_name }}"
+#    state: absent
+#  when: md5sum_latest.stdout != service_pack_iso_md5sum
+#  delegate_to: localhost
+#
+#- name: 'Check if {{ service_pack_iso_name }} exists locally'
+#  stat:
+#      path: '{{ build_src_location }}/{{ service_pack_iso_name }}'
+#  delegate_to: 'localhost'
+#  register: register_local_iso
+#  notify: handler_for_message - check_service_locally
+#  tags: check_iso_locally
+#
+#- name: "Download {{ service_pack_iso_name }}  locally"
+#  get_url:
+#      dest: "{{ build_src_location }}/{{ service_pack_iso_name }}"
+#      url: "{{ service_pack_iso_url }}/{{ service_pack_iso_name }}"
+#  delegate_to: 'localhost'
+#  notify: handler_for_message - build_download
+#  when: not register_local_iso.stat.exists
+#  tags: build_download
+#  
+#- name: 'Create Temporary Directory on Source Server for ansible'
+#  file:
+#      path: "{{ results_dir }}"
+#      state: directory
+#      mode: '644'
+#  delegate_to: 'localhost'
+#  tags: temp_dir_rpt
+
+... 

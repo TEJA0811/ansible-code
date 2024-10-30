@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-fanout-agent-activemq
+  labels:
+    {{- include "activemq.labels" . | nindent 4 }} 
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }} 
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "activemq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }} 
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "activemq.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.images.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "activemq.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }} 
+          {{- if .Values.global.images.registry }}
+          image: "{{ .Values.global.images.registry }}/{{ .Values.global.images.activemq.repository }}:{{ .Values.global.images.activemq.tag }}"
+          {{- else }}
+          image: "{{ .Values.global.images.activemq.repository }}:{{ .Values.global.images.activemq.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.global.images.pullPolicy }}
+          ports:
+            - name: tcp-port
+              containerPort: {{ .Values.service.ports.tcpPort }}
+              protocol: TCP
+            - name: webconsole-port
+              containerPort: {{ .Values.service.ports.webConsolePort }}
+              protocol: TCP
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /config
+              subPath: {{ .Release.Name }}-fanout-agent
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            {{- if .Values.global.persistence.existingClaim }}
+            claimName: {{ .Values.global.persistence.existingClaim }}
+            {{- else }}
+            claimName: {{ .Release.Name }}-fanout-agent-data-dynamic-pvc
+            {{- end }}
+      {{- with .Values.global.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

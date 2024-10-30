@@ -1,0 +1,40 @@
+---
+# defaults file for install_IDC
+
+# Major version of the product.
+marketing_major : "4"
+# Minor version of the product.
+marketing_minor : "8"
+# Revision version of the product.
+marketing_revision : "5"
+
+# Major version of the product.
+idconsole_marketing_major : "1"
+# Minor version of the product.
+idconsole_marketing_minor : "4"
+# Revision version of the product.
+idconsole_marketing_revision : "0"
+
+
+# Location of source images
+images_dir: "/root/tmp/Identity_Manager_{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}_Containers"
+
+
+
+
+## Container specific poperties
+#engine_container_ipaddress : "192.168.0.2"
+idconsole_container_hostname : "{{ hostvars[groups['idconsole'][0]]['ansible_facts']['hostname'] }}"
+idconsole_container_name : "identityconsole-container"
+idconsole_shared_volume : "/data/IDC_data"
+idconsole_volumes :
+  - "{{ idconsole_shared_volume }}:/config" 
+idconsole_files :
+  - "keys.pfx"
+  - "SSCert.pem"
+  - "edirapi.conf"
+#idconsole_port_mapping :
+#  - "9000:9000"
+network_set: "host"
+
+...

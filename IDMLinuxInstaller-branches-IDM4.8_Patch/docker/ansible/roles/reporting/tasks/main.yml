@@ -1,0 +1,107 @@
+---
+# tasks file for reporting
+
+
+- name : Get Identity Reporting image file stats
+  local_action: stat path="{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityreporting.tar.gz"
+  register: rptfile
+
+- name : Check for image existence in Docker host
+  shell : docker images | grep identityreporting | grep {{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+  register : imagealreadyloaded
+  ignore_errors : yes
+
+- name : Copy Identity Reporting image to Docker host
+  copy :
+          src : "{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityreporting.tar.gz"
+          dest : "{{ rpt_shared_volume }}"
+  when : 
+        - rptfile.stat.exists
+        - imagealreadyloaded.rc == 1
+
+- name : Load the Identity Reporting image
+  docker_image:
+    state : present
+    name: identityreporting:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+    load_path: "{{ rpt_shared_volume }}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityreporting.tar.gz"
+    timeout: 3000
+    source: load
+  register : reportingLoadImage
+  until: reportingLoadImage is succeeded
+  notify : Load Identity Reporting image
+  when : imagealreadyloaded.rc == 1
+  
+- name : Copy silent.properties file to target server
+  copy :
+    src : "{{ playbook_dir }}/roles/variables/files/silent.properties"
+    dest : "{{ rpt_shared_volume }}" 
+    
+- name : Copy OSP Tomcat keystore file to Identity Reporting shared volume
+  copy :
+    src : "{{ playbook_dir }}/input/{{ OSP_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    dest : "{{ rpt_shared_volume }}"
+    
+- name : Copy Identity Reporting Tomcat keystore file to target server
+  copy :
+    src : "{{ playbook_dir }}/input/{{ RPT_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    dest : "{{ rpt_shared_volume }}"
+
+- name : Copy Identity Reporting files to shared volume
+  copy :
+    src : "{{ playbook_dir }}/input/{{ item }}"
+    dest : "{{ rpt_shared_volume }}"
+  loop: "{{ rpt_files }}"
+  when: rpt_files is defined
+  
+
+- name : Deploy Identity Reporting container
+  docker_container :
+    name : "{{ rpt_container_name }}"
+    image : "identityreporting:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}"
+    state: started
+    stop_timeout: 300
+    hostname : "{{ RPT_SERVER_HOSTNAME }}"
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+        ipv4_address : "{{ rpt_container_ipaddress }}"
+    volumes : "{{ rpt_volumes | default([]) }}"
+    ports : "{{ rpt_port_mapping | default([]) }}"
+    dns_servers : "{{ dns_list | default([]) }}"
+    env:
+      SILENT_INSTALL_FILE : /config/silent.properties
+  notify : Deploy Identity Reporting Container
+
+- name: Wait until Tomcat in Identity Reporting container is up and running
+  shell: cat "{{ rpt_shared_volume }}/reporting/log/idmconfigure.log"
+  register: data
+  until : "'Completed configuration of : Identity Reporting' in data.stdout"
+  delay : 15
+  retries : 120
+
+- name : Import OSP certificate to idm.jks
+  shell : "docker exec {{rpt_container_name}} /opt/netiq/common/jre/bin/keytool -importkeystore -srckeystore {{ OSP_COMM_TOMCAT_KEYSTORE_FILE }} -srcstorepass {{ OSP_COMM_TOMCAT_KEYSTORE_PWD }} -destkeystore /opt/netiq/idm/apps/tomcat/conf/idm.jks -deststorepass {{ IDM_KEYSTORE_PWD }} -noprompt"
+
+- name : Restart Identity Reporting container
+  shell : "docker restart {{rpt_container_name}}"
+
+- name : Delete Identity Reporting tarball
+  file :
+          path : "{{ rpt_shared_volume }}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityreporting.tar.gz"
+          state : absent
+          
+- name: Delete silent.properties file
+  file:
+    path: "{{ rpt_shared_volume }}/silent.properties"
+    state: absent
+
+- name: Delete Identity Reporting Tomcat keystore file
+  file:
+    path: "{{ rpt_shared_volume }}/{{ RPT_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    state: absent
+    
+- name: Delete OSP Tomcat keystore file
+  file:
+    path: "{{ rpt_shared_volume }}/{{ OSP_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    state: absent
+

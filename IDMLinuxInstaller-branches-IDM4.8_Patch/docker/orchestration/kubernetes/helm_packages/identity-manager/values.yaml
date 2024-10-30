@@ -1,0 +1,566 @@
+# Default values for identity-manager.
+
+formatVersion: v2
+
+# Registry and images 
+images:
+  pullPolicy: Always
+  registry:
+  imagePullSecrets: []
+  identityengine:
+    repository: identityengine
+    tag: "idm-4.8.8"
+  activemq:
+    repository: activemq
+    tag: "idm-4.8.8"
+  formrenderer:
+    repository: formrenderer
+    tag: "idm-4.8.8"
+  identityapplications:
+    repository: identityapplication
+    tag: "idm-4.8.8"
+  identityreporting:
+    repository: identityreporting
+    tag: "idm-4.8.8"
+  osp:
+    repository: osp
+    tag: "idm-4.8.8"
+  sspr:
+    repository: sspr/sspr-webapp
+    tag: "4.7.0.0-ea"
+  identityconsole:
+    repository: identityconsole
+    tag: "1.7.0.0000"
+  identityutils:
+    repository: identityutils
+    tag: "idm-4.8.8"
+  
+
+# Ingress
+ingress:
+  enabled: true
+  annotations: {}
+  host:
+  tls:
+    secretName:
+    azureKeyVaultCertificateName:
+
+# Persistence
+persistence:
+  identityengine:
+    volumeClaimTemplate:
+      storageClassName:
+      storageSize:
+      selector: {}
+  shared:
+    existingClaim:
+    dynamicClaim:
+      storageClassName:
+      storageSize:
+      selector: {}
+
+#-----------------------------------------------------------------------------------------------------
+# Secret Manager for sensitive data such as passwords, keys and certificates      
+#-----------------------------------------------------------------------------------------------------
+secret_manager:
+
+  # Kubernetes Secret as Secret Manager
+  kubernetesSecret:
+  
+    # Enter 'true' if you want to use Kubernetes Secret as Secret Manager, otherwise 'false' 
+    use: false
+  
+  # Azure Key Vault as Secret Manager
+  azureKeyVault:
+  
+    # Enter 'true' if you want to use Kubernetes Secret as Secret Manager, otherwise 'false'
+    use: true
+
+    # Name of the Azure Key Vault
+    azureKeyVaultName: 
+
+    # Tenant ID of the Azure Key Vault
+    azureKeyVaultTenantId: 
+
+    # ClientID of the user-assigned managed identity to use
+    azureUserAssignedIdentityID: 
+
+# Host Aliases
+hostAliases: []
+
+IS_ADVANCED_EDITION: "y"
+
+AZURE_POSTGRESQL_REQUIRED: "y"
+
+KUBE_SUB_DOMAIN: "cluster.local"
+
+# +--------------------------------------------------------------------------------------------+
+# | Identity Vault container objects for storing users, admins and groups.                     |
+# | The container objects will be assigned with the required password policies and the trustee |
+# | rights.                                                                                    |                                                                           |
+# +--------------------------------------------------------------------------------------------+
+DATA_CONTAINERS:
+    
+  # LDIf configuration for creating the data containers
+  DATA_CONTAINERS_LDIF: |
+    version: 1
+    
+    #--Add Root container--
+    dn: o=data
+    changetype: add
+    o: data1
+    objectClass: organization
+    objectClass: ndsLoginProperties
+    objectClass: ndsContainerLoginProperties
+    objectClass: Top
+    
+    #--Add User search container--
+    dn: ou=users,o=data
+    changetype: add
+    objectClass: organizationalUnit
+    objectClass: ndsLoginProperties
+    objectClass: ndsContainerLoginProperties
+    objectClass: Top
+    nspmpasswordpolicydn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+    
+    #--Add Group Search root container--
+    dn: ou=groups,o=data
+    changetype: add
+    objectClass: organizationalUnit
+    objectClass: ndsLoginProperties
+    objectClass: ndsContainerLoginProperties
+    objectClass: Top
+    
+    #--Add Admin search container--
+    dn: ou=sa,o=data
+    changetype: add
+    objectClass: organizationalUnit
+    objectClass: ndsLoginProperties
+    objectClass: ndsContainerLoginProperties
+    objectClass: Top
+    
+    #--Add Devices container--
+    dn: ou=devices,o=data
+    changetype: add
+    objectClass: organizationalUnit
+    objectClass: ndsLoginProperties
+    objectClass: ndsContainerLoginProperties
+    objectClass: Top
+    
+    #--Update Password Policy with nsimAssignments attribute--
+    dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+    changetype: modify
+    add: nsimAssignments
+    nsimAssignments: o=data
+    -
+    
+    #--Update Password Policy with nspmConfigurationOptions attribute--
+    dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+    changetype: modify
+    replace: nspmConfigurationOptions
+    nspmConfigurationOptions: 884
+    -
+    
+    #--Update Password Policy with nspmCaseSensitive attribute--
+    dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+    changetype: modify
+    add: nspmCaseSensitive
+    nspmCaseSensitive: TRUE
+    -
+    
+    #--Link Root Container with the Password Policy--
+    dn: o=data
+    changetype: modify
+    add: nspmPasswordPolicyDN
+    nspmPasswordPolicyDN: cn=Sample Password Policy,cn=Password Policies,cn=Security
+    -
+      
+  #------------------------------------------------------------------------------------------------------------------------
+  # Specify DNs for Root container, Group root container, User Container and Admin container as specified in the above LDIF
+  #------------------------------------------------------------------------------------------------------------------------ 
+
+  # Root container DN
+  ROOT_CONTAINER: "o=data"
+      
+  # Group Search root container DN
+  GROUP_ROOT_CONTAINER: "ou=groups,o=data"  
+      
+  # User search container DN
+  USER_CONTAINER: "ou=users,o=data"
+    
+  # Admin search container DN
+  ADMIN_CONTAINER: "ou=sa,o=data"
+
+########################################################################
+#                Identity Engine Configuration                          #
+######################################################################## 
+identityengine:
+
+  nameOverride: "identityengine"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service_external:
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    type: LoadBalancer
+    loadBalancerIPs: [] # applicable when service type is LoadBalancer 
+  service:
+    annotations: {}
+    ports:
+      ldapsPort: 636
+      ldapPort: 389
+      ncpPort: 524
+      httpPort: 8028
+      httpsPort: 8030
+      healthCheckPort: 8080
+
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  configuration:
+
+    ID_VAULT_TREENAME: "IDENTITY_VAULT_TREE"  
+    
+    # Identity Engine Server Context
+    ID_VAULT_SERVER_CONTEXT: "servers.system"
+    
+    # Identity Engine Default Driver Set Name
+    ID_VAULT_DRIVER_SET: "driverset1"
+    
+    # Identity Engine Default Driver Set Deploy Context
+    ID_VAULT_DEPLOY_CTX: "o=system"  
+
+    ID_VAULT_ADMIN_LDAP: "cn=admin,ou=sa,o=system"
+
+    ID_VAULT_PASSWORD:
+      secret: 
+    
+     
+    #----------------------------------------------   
+    # Identity Vault Certificates
+    #---------------------------------------------- 
+
+    # Key size for creation of RSA certificate authority keys and server keys   
+    ID_VAULT_RSA_KEYSIZE: "4096"
+    
+    # Curve for the creation of EC certificate authority keys and server keys
+    ID_VAULT_EC_CURVE: "P384"
+    
+    # Certificate life for the creation of default server certificates
+    ID_VAULT_CA_LIFE: "10"
+    
+
+########################################################################
+#                            OSP                                       #
+########################################################################
+osp:
+  nameOverride: "osp"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+    loadBalancerIP: "" # applicable when service type is LoadBalancer
+    ports:
+      httpPort: 8543
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  configuration:
+    EXTERNAL_SSO_SERVER: "y"
+    SSO_SERVER_PORT: "8180"
+    OSP_CUSTOM_NAME: "Identity Access"
+    TOMCAT_HTTP_PORT: "8180"
+    CUSTOM_OSP_CERTIFICATE: "n"
+    OSP_COMM_TOMCAT_KEYSTORE_FILE: ""
+    SSO_SERVICE_PWD:
+      secret:
+    OSP_KEYSTORE_PWD: "$COMMON_KEYSTORE_PWD"
+    IDM_KEYSTORE_PWD: "$COMMON_KEYSTORE_PWD"
+    OSP_COMM_TOMCAT_KEYSTORE_PWD: "$COMMON_KEYSTORE_PWD" 
+
+########################################################################
+#                            identityapplications                      #
+########################################################################
+identityapplications:
+  nameOverride: "identityapplications"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+    loadBalancerIP: "" # applicable when service type is LoadBalancer
+    ports:
+      httpPort: 8543
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  configuration:
+    UA_ADMIN: "cn=uaadmin,ou=sa,o=data" 
+    UA_ADMIN_PWD:
+      secret: 
+    UA_DB_SCHEMA_FILE: ""
+    WFE_DB_SCHEMA_FILE: ""
+    UA_CEF_AUDIT_ENABLED: "n"
+    OSP_INSTALL_FOLDER: ""
+    SSPR_INSTALL_FOLDER: ""
+    USE_EXISTING_CERT_WITH_SAN: ""
+    CUSTOM_UA_CERTIFICATE: "n"
+    UA_COMM_TOMCAT_KEYSTORE_FILE: ""
+    WFE_APP_CTX: "workflow"
+    UA_APP_CTX: "IDMProv"
+    WFE_DB_NEW_OR_EXIST: "new"
+    UA_DB_NEW_OR_EXIST: "new"
+    UA_WFE_DB_CREATE_OPTION: "now"
+    UA_WFE_DATABASE_USER: "idmadmin"
+    UA_WFE_DATABASE_PWD:
+      secret:      
+    WFE_DATABASE_NAME: "igaworkflowdb"
+    UA_DATABASE_NAME: "idmuserappdb"
+    UA_WFE_DB_PORT: "5432"
+    UA_WFE_DB_HOST: "postgresql"
+    INSTALL_PG_DB: "n"
+    UA_WFE_DB_PLATFORM_OPTION: "postgres"
+    UA_WORKFLOW_ENGINE_ID: "ENGINE"
+    UA_CLUSTER_ENABLED: "n"
+    UA_DRIVER_NAME: "User Application Driver"
+    UA_CREATE_DRIVERS: "y"
+    TOMCAT_SSL_KEYSTORE_PASS: "$COMMON_KEYSTORE_PWD"
+    UA_COMM_TOMCAT_KEYSTORE_PWD: "$COMMON_KEYSTORE_PWD"
+
+#######################################################################
+#                            formrenderer                             #
+#######################################################################
+formrenderer:
+  nameOverride: "formrenderer"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+    loadBalancerIP: "" # applicable when service type is LoadBalancer
+    ports:
+      httpPort: 8600
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  configuration: {}
+
+#######################################################################
+#                            activemq                                 #
+#######################################################################
+activemq:
+  nameOverride: "activemq"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+    loadBalancerIP: "" # applicable when service type is LoadBalancer
+    ports:
+      tcpPort: 61616
+      webConsolePort: 8161
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  configuration: {}
+
+########################################################################
+#                            identityreporting                         #
+########################################################################
+identityreporting:
+  nameOverride: "reporting"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+    loadBalancerIP: "" # applicable when service type is LoadBalancer
+    ports:
+      httpPort: 8543
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  configuration:
+    RPT_ADMIN: "cn=uaadmin,ou=sa,o=data" 
+    RPT_ADMIN_PWD:
+      secret: idm-common-password
+    FOR_SSPR_CONTAINER: "n"
+    RPT_DATABASE_PLATFORM_OPTION: "postgres"
+    INSTALL_PG_DB_FOR_REPORTING: "n"
+    RPT_DATABASE_HOST: "postgresql"
+    RPT_DATABASE_PORT: "5432"
+    RPT_DATABASE_NAME: "idmrptdb"
+    RPT_ORACLE_DATABASE_TYPE: "true"
+    RPT_DATABASE_USER: "postgres" 
+    RPT_DATABASE_SHARE_PASSWORD:
+      secret: 
+    RPT_DATABASE_CREATE_OPTION: "now"
+    RPT_DATABASE_NEW_OR_EXIST: "new"
+    RPT_TOMCAT_HTTP_PORT: "8180"
+    RPT_DEFAULT_EMAIL_ADDRESS: "admin@mycompany.com"
+    RPT_SMTP_CONFIGURE: "n"
+    RPT_CREATE_DRIVERS: "y"
+    CUSTOM_RPT_CERTIFICATE: "n"
+    RPT_COMM_TOMCAT_KEYSTORE_FILE: ""
+    RPT_APP_CTX: ""
+    RPT_SMTP_SERVER: ""
+    RPT_SMTP_SERVER_PORT: ""
+    RPT_OSP_INSTALLED: ""
+    RPT_INSTALL_FOLDER: ""
+    RPT_SSO_SERVICE_PWD: "$SSO_SERVICE_PWD"
+    RPT_COMM_TOMCAT_KEYSTORE_PWD: "$COMMON_KEYSTORE_PWD"
+
+########################################################################
+#                            sspr                                      #
+########################################################################
+sspr:
+  nameOverride: "sspr"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+    loadBalancerIP: "" # applicable when service type is LoadBalancer
+    ports:
+      httpPort: 8443
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  configuration:
+    CUSTOM_SSPR_CERTIFICATE: "n"
+    SSPR_COMM_TOMCAT_KEYSTORE_FILE: ""
+    CONFIGURATION_PWD:
+      secret:
+
+#######################################################################
+#                            Identity Console                         #
+#######################################################################
+identityconsole:
+  nameOverride: "identityconsole"
+  deploy: true
+  replicaCount: 1
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+    loadBalancerIP: "" # applicable when service type is LoadBalancer
+    ports:
+      httpPort: 8543
+  resources: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  configuration:
+    ID_CONSOLE_USE_OSP: "y"
+
+#########################################################################
+#                           NAME OVERRIDES                              #
+#########################################################################
+nameOverride: ""
+fullnameOverride: ""

@@ -1,0 +1,5 @@
+---
+# defaults file for rpm_dtd
+
+
+dtd_rpm_url: 'http://blr-idm-jenkins.labs.blr.novell.com:8080/job/IDM4.8_Patch/job/IDMDrivers/job/dirxml_flatfile_IDM4.8_Patch/3/artifact/dirxml_flatfile_Driver.zip'

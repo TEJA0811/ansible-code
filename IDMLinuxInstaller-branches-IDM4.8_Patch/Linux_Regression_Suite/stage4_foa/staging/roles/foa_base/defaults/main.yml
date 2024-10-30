@@ -1,0 +1,5 @@
+---
+# defaults file for fanoutagent role
+silent_prop_foa: silent_ansible_foa.properties
+
+...

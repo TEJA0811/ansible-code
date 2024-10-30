@@ -1,0 +1,169 @@
+{{- if (include "identity-manager.activemq.deploy" .) }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "identity-manager.activemq.name" . }}
+  labels:
+    {{- include "identity-manager.activemq.labels" . | nindent 4 }} 
+spec:
+  {{- if not .Values.activemq.autoscaling.enabled }}
+  replicas: {{ .Values.activemq.replicaCount }} 
+  {{- end }}
+  selector: 
+    matchLabels:
+      {{- include "identity-manager.activemq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.activemq.podAnnotations }} 
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "identity-manager.activemq.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- include "identity-manager.imagePullSecrets" . | nindent 8 }}
+        
+      serviceAccountName: {{ include "identity-manager.activemq.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.activemq.podSecurityContext | nindent 8 }} 
+      initContainers:
+        - name: init-activemq
+
+          image: {{ include "identity-manager.identityutils.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+
+          env:
+
+            {{- include "identity-manager.configuration.envs" 
+            (dict
+              "top" .
+            ) | nindent 12 }}
+
+          command:
+              - "/bin/bash"
+              - "-c"
+              - >
+
+                {{ include "identity-manager.generate-secret-properties.command" 
+                (dict 
+                  "top" . 
+                  "secretMountFolder" "/mnt/secrets-store" 
+                  "secretPropertiesPath" "/shared-conf/secret.properties"
+                ) | nindent 16 }}
+
+                {{ include "identity-manager.add-keystore-pwd-to-secret-properties.command" 
+                (dict 
+                  "top" .
+                  "secretMountFolder" "/mnt/key-store-pwd" 
+                  "secretPropertiesPath" "/shared-conf/secret.properties"
+                ) | nindent 16 }}
+          
+          volumeMounts:
+
+            {{- include "identity-manager.secrets.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/secrets-store"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.key-store-pwd.volumeMount" 
+            (dict 
+              "top" .
+              "mountPath" "/mnt/key-store-pwd"
+            ) | nindent 12 }}
+ 
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-conf" 
+              "mountPath" "/shared-conf"
+            ) | nindent 12 }}
+
+      containers:
+        - name: {{ include "identity-manager.activemq.name" . }}
+          securityContext:
+            {{- toYaml .Values.activemq.securityContext | nindent 12 }} 
+          image: {{ include "identity-manager.activemq.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . }}
+
+          env:
+
+            {{- include "identity-manager.configuration.envs" 
+            (dict
+              "top" .
+            ) | nindent 12 }}
+
+            - name: SECRET_PROPERTY_PATH
+              value: /shared-conf/secret.properties
+              
+          ports:
+            - name: tcp-port
+              containerPort: {{ .Values.activemq.service.ports.tcpPort }}
+              protocol: TCP
+            - name: webconsole-port
+              containerPort: {{ .Values.activemq.service.ports.webConsolePort }}
+              protocol: TCP
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+          resources:
+            {{- toYaml .Values.activemq.resources | nindent 12 }}
+          volumeMounts:
+
+            {{- include "identity-manager.shared-persistent.volumeMount" 
+            (dict
+              "mountPath" "/config"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-conf" 
+              "mountPath" "/shared-conf"
+            ) | nindent 12 }}
+            
+      volumes:
+
+        {{- include "identity-manager.shared-persistent.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+        {{- include "identity-manager.secrets.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+
+        {{- include "identity-manager.key-store-pwd.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+        {{- include "identity-manager.shared.volume" 
+        (dict 
+          "name" "shared-conf"
+        ) | nindent 8 }}
+ 
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.activemq.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.activemq.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.activemq.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- end }}

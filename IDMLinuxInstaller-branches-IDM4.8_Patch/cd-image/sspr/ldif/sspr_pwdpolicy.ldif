@@ -1,0 +1,25 @@
+version: 1
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nsimAssignments
+nsimAssignments: ___USER_CONTAINER___
+-
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+replace: nspmConfigurationOptions
+nspmConfigurationOptions: 884
+-
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nspmCaseSensitive
+nspmCaseSensitive: TRUE
+-
+
+dn: ___USER_CONTAINER___
+changetype: modify
+add: nspmPasswordPolicyDN
+nspmPasswordPolicyDN: cn=Sample Password Policy,cn=Password Policies,cn=Security
+-

@@ -1,0 +1,14 @@
+---
+# tasks file for variables_IDC
+
+    - name: "Copy IDC Certs to install_IDC role"
+      copy:
+        src: "{{ item }}"
+        dest: "{{ role_path }}/../install_IDC/files/"
+        owner: root
+        group: root
+        mode: '644'
+      delegate_to: 'localhost'
+      with_items:
+        - SSCert.pem
+        - cert.pfx

@@ -1,0 +1,60 @@
+---
+# defaults file for variables_IDC
+
+################## IDConsole Service Pack Details ##############################
+# Information about IDConsole build can be changed here
+
+#Modify the download link and other variables as per your requirement
+#service_pack_tar_url: 'http://blr-builder.labs.blr.novell.com/artifacts/Publish/Identity_Console/Identityconsole_1.3/standalone_build/'
+#service_pack_tar_url:  'http://blr-iam-jenkins4.labs.blr.novell.com:8080/view/Idconsole_eDirApi/job/Identity_console_standalone_patches/lastSuccessfulBuild/artifact'
+service_pack_tar_url:  'http://blr-iam-jenkins4.labs.blr.novell.com:8080/job/Identity_console_standalone_master/lastSuccessfulBuild/artifact'
+#service_pack_tar_url:http://blr-iam-jenkins4.labs.blr.novell.com:8080/view/Idconsole_eDirApi/job/Identity_console_standalone_1.4.0_Patches/3/artifact/
+#service_pack_tar_name: 'IdentityConsole_130_Linux'
+#service_pack_tar_name:  'IdentityConsole_130_P1_Linux'
+service_pack_tar_name:  'IdentityConsole_160_Linux'
+
+#Note Below values will be automatically updated by Ansible
+IDC_deployed_md5sum: a51bd6339d28338652797e72dfbe4d48
+new_build: true
+
+##################Temporary Location Details################################
+#ansible related (please do not change)
+build_dest_location: /root/cicd
+silent_install_IDC: silent_install.py
+
+
+##################IDC installer Details################################
+# Information regarding IDConsole installation need to changed here
+
+#Identity Console server hostname(FQDN in lowercase)/IP address (OPTIONAL: ansible will collect on its own)
+IDC_host: 'idconsole-hostname'
+#Enter the port number you wish Identity Console to listen on (DEFAULT: 9000)
+IDC_port: '9000'
+#Enter the eDirectory/Identity Vault server Domain name/IP address with LDAPS port number [192.168.1.1:636]
+IDV_address: '10.71.130.57:636'
+#Enter the eDirectory/Identity Vault username (e.g: cn=admin,ou=org_unit,o=org) (MUST CHANGE)
+IDV_user: 'cn=admin,ou=servers,o=system'
+#Enter the eDirectory/Identity Vault user password (MUST CHANGE)
+IDV_password: 'novell'
+#Enter the server certificate(keys.pfx) password (MUST CHANGE)
+pfx_password: 'novell'
+
+
+################### Esxi credentials #########################################
+## Information about Esxi VMs can be found here
+
+esxi_hostname: 164.99.90.76
+esxi_username: acontroller
+esxi_password: netiq@321
+esxi_datacenter: ha-datacenter
+esxi_folder: /
+ 
+vm_list:
+    - vm_name: IDMQA-SLES15SP2-IDC-35.84
+      vm_snapshot_name: base_ansible
+    - vm_name: SLES15SP2-IDM1-90.56
+      vm_snapshot_name: ansible_cicd
+    - vm_name: SLES15SP2-IDM2-90.90
+      vm_snapshot_name: ansible_cicd
+
+...

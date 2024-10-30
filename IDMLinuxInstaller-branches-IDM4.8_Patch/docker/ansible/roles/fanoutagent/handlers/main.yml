@@ -1,0 +1,11 @@
+---
+# handlers file for fanoutagent
+
+- name : Load FANOUT AGENT Image
+  debug :
+    msg : FANOUT Agent Image is pulled successfully
+
+- name : Deploy FANOUT AGENT Container
+  debug :
+    msg : FANOUT AGENT Container deployed successfully
+

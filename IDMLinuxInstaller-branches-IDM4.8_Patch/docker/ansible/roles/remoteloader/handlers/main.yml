@@ -1,0 +1,11 @@
+---
+# handlers file for remoteloader
+
+- name : Load REMOTE LOADER Image
+  debug :
+    msg : Remote Loader Image is loaded
+
+- name : Deploy REMOTE LOADER Container
+  debug :
+    msg : Remote Loader container is deployed
+

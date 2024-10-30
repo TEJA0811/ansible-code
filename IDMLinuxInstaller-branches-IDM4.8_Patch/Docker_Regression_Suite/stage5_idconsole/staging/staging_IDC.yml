@@ -1,0 +1,28 @@
+---
+
+# Play to decide if Identity Console has to be deployed
+
+# Play to revert snapshots of a VM if defined
+- name: 'Revert Snapshots'
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     revert_snapshots
+    when:                     
+      - vm_list is defined
+#      - new_build
+  tags: revert_snapshots
+
+#Play to deploy Identity Console
+- name:  'Deploy Identity Console'
+  hosts:  idconsole
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     install_IDC
+    when:                     
+      - groups[ 'idconsole' ] | length > 0
+  tags: deploy_IDC
+  
+...

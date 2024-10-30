@@ -1,0 +1,82 @@
+#===============================================================================
+# Configuration template for Identity Manager Fanout Agent Deployment on Cloud.         
+#                                                                          
+# This is a YAML-formatted file which uses 2 spaces for indentation.
+#
+# Ref: https://yaml.org/spec/1.2.2/                                                                              
+#===============================================================================
+
+global:
+
+  #################################################################################
+  #            Registry credentials for Identity Manager docker images            #
+  #################################################################################
+  images:
+
+    # Registry Server, example: exampleregistry.azurecr.io
+    registry: 
+
+    # Kubernetes secrets required for pulling the docker images
+    imagePullSecrets:
+      # Name of the Kubernetes secret containing the login credentials of the registry 
+      - name: 
+
+
+  #################################################################################
+  #                               Data Persistence                                #
+  #################################################################################
+  persistence:
+
+    # If you want to use an existing Persistent Volume Claim(PVC), enter the name of the existing claim 
+    existingClaim: 
+
+    # Else, for dynamic provisioning of PVC, specify the storage class name and the storage size
+    # Supported storage classes:
+    #      azurefile  => For deployment on Azure Kubernetes Service
+    dynamicClaim:
+      storageClassName: 
+      storageSize: 
+
+
+#################################################################################
+#                          Fanout Agent Service                                 #
+#################################################################################
+service:
+
+  # Fanout Agent Service Ports
+  ports:
+    - 8000
+
+########################################################################################
+#                          Resource Requests and Limits                                #
+########################################################################################
+# Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "1"
+    memory: 2Gi
+
+#################################################################################
+#                          ActiveMQ Service                                  #
+#################################################################################
+activemq:
+  # If you want to deploy ActiveMQ Service for Fanout Agent set this to true
+  install: false
+
+  #--------------------------------------------------------------------------------------
+  # Resource requests and limits for ActiveMQ service
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 250m
+      memory: 2Gi    
+
+
+

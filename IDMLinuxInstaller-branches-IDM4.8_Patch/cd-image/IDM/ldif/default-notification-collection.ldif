@@ -1,0 +1,9 @@
+version: 1
+
+dn: cn=Default Notification Collection, cn=Security
+changetype: add
+objectClass: notfTemplateCollection
+objectClass: Top
+ACL: 1#subtree#[Public]#[Entry Rights]
+ACL: 3#subtree#[Public]#[All Attributes Rights]
+cn: Default Notification Collection

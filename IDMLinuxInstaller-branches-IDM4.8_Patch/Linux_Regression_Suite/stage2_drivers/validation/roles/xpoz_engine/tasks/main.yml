@@ -1,0 +1,36 @@
+---
+# tasks file for xpoz_engine
+    - name: "Copy XPOZ_ENV.txt to XPOZ Server"
+      win_copy:
+         src: XPOZ_ENV.TXT
+         dest: C:\CICD_pipeline\stage2_drivers\XPOZv61_20080728-W\
+         backup: yes
+  
+    - name: "Remove temporary console file(if present)"
+      win_file:
+          path: C:\CICD_pipeline\stage2_drivers\console.txt
+          state: absent
+           
+    - name: "Run XPOZ for Drivers"
+      win_shell: .\XPOZConsole.exe C:\CICD_pipeline\stage2_drivers\DelimitedTextDriver\DelimitedText.env >>C:\CICD_pipeline\stage2_drivers\console.txt
+      args:
+           chdir: C:\CICD_pipeline\stage2_drivers\XPOZv61_20080728-W
+      ignore_errors: true
+
+    - name: "Fetch files from XPOZ Server to Ansible Controller"
+      fetch:
+        src: "{{ item }}"
+        dest: "{{ results_dir }}/Regression_Drivers/"
+        flat: yes
+      with_items:
+          - "C:\\CICD_pipeline\\stage2_drivers\\console.txt"
+          - "C:\\CICD_pipeline\\stage2_drivers\\DelimitedTextDriver\\Delimited Text Log.html"
+          - "C:\\CICD_pipeline\\stage2_drivers\\DelimitedTextDriver\\Delimited Text Log_tc.html"
+          - "C:\\CICD_pipeline\\stage2_drivers\\DelimitedTextDriver\\Delimited Text Log_err.html"
+
+    - name: "Register Test Results"
+      shell: |
+           dos2unix "{{ results_dir }}/Regression_Drivers/console.txt"
+           awk '/returned: 0/{flag=1; next} /!!! STOPPED !!!/{flag=0} flag' "{{ results_dir }}/Regression_Drivers/console.txt" > "{{ results_dir }}/Regression_Drivers/xpoz_result"
+      delegate_to: 'localhost'
+...

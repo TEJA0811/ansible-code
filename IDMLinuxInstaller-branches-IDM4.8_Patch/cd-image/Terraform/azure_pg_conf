@@ -1,0 +1,26 @@
+// Add the following module conditionally based on the input
+// For testing assume pg is needed
+module "dbserver" {
+
+  source                       = "./Azure-PG-Server"
+  resource_group_name          = var.resource_group_name
+  resource_group_location      = var.resource_group_location
+  storage_account_name_for_tfstate = var.storage_account_name_for_tfstate
+  keyvault_name                = var.keyvault_name
+  keyvault_resource_group_name = var.keyvault_resource_group_name
+  #createdb                       = var.createdb
+  keyvault_dbadminloginpass_name  = var.keyvault_dbadminloginpass_name
+  keyvault_uawfedbuser_name       = var.keyvault_uawfedbuser_name
+  keyvault_uawfedbuserpwd_name    = var.keyvault_uawfedbuserpwd_name
+  keyvault_uadbname_name          = var.keyvault_uadbname_name
+  keyvault_wfedbname_name         = var.keyvault_wfedbname_name
+  keyvault_rptdbname_name         = var.keyvault_rptdbname_name
+  keyvault_rptdbusersharepwd_name = var.keyvault_rptdbusersharepwd_name
+  terraform_local_ip              = var.terraform_local_ip
+  azure_postgres_server_name      = var.azure_postgres_server_name
+  db_sku_name                       = var.db_sku_name
+  db_version                        = var.db_version
+  db_storage_mb                     = var.db_storage_mb
+  db_backup_retention_days          = var.db_backup_retention_days
+  #depends_on                     = [module.server]
+}

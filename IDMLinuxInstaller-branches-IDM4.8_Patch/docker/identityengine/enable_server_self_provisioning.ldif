@@ -1,0 +1,7 @@
+version: 1
+
+dn: cn=__ID_VAULT_TREENAME__ CA,cn=Security
+changetype: modify
+add: ndspkiSecurityRightsLevel
+ndspkiSecurityRightsLevel: 36
+-

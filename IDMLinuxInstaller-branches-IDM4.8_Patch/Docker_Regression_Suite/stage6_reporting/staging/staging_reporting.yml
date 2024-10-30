@@ -1,0 +1,106 @@
+---
+
+#Play to clean docker host for Identity Manager Role
+- name: 'Clean docker host'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     cleanup
+    when:                     "(groups[ 'idmengine' ] | length > 0)"  
+  tags: idm_role_cleanup
+
+#Play to deploy Identity Manager Role
+- name: 'Install Identity Manager Engine'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     engine
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_role_engine
+  
+#Play to deploy OSP Role
+- name: 'Install OSP'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     osp
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_role_osp
+
+#Play to deploy Postgres Role
+- name: 'Install Postgres DB'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     postgres
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_role_postgres
+
+#Play to deploy Identity Apps Role
+- name: 'Install Identity application'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     identityapps
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_role_uapps
+
+#Play to deploy Reporting Role
+- name: 'Install Identity Reporting'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     reporting
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_role_rpt
+
+# #Play to deploy SSPR Role
+# - name: 'Install SSPR'
+#   hosts: idmengine
+#   become: yes
+#   become_method: sudo
+#   roles:
+#   - role:                     sspr
+#     when:                     "groups[ 'idmengine' ] | length > 0"
+#   tags: idm_role_sspr
+
+#Play to download Reports and create Data sync policy
+- name: 'Run Rest API Automation to download reports and create data sync policy'
+  hosts: mvn_server
+  tasks:
+    - name: 'Remove previous Data sync policies from Sentinel'
+      postgresql_query:
+        login_host: "{{ groups['slm_iga'][0] }}"
+        db: SIEM
+        login_user: dbauser
+        login_password: novell
+        query: "DELETE FROM public.event_data_sync_policies WHERE created_by = 1;"
+      delegate_to: localhost
+
+    - name: 'Download IDM Reports and create data sync policy'
+      shell: |
+              cd /home/container/IDMAppsRestAuto/
+              mvn clean test -Dsurefire.suiteXmlFiles=views_testng.xml
+
+    - name: "Wait for reports to get downloaded"
+      pause:
+        minutes: 2
+
+  tags: rpt_download
+    
+# Play to enable CEF auditing
+- name: 'Perform CEF Auditing and views addition for running reports'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     cef_audit
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_cef_audit
+...

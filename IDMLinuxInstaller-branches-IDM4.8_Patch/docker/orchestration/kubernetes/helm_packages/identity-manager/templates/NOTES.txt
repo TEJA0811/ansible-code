@@ -1,0 +1,73 @@
+===================================================================================
+
+- NetIQ Identity Manager has been deployed. 
+  
+  You can watch the status of the deployment by using the following command:
+
+         kubectl get pod --namespace {{ .Release.Namespace }} --watch
+
+-------------------------
+Identity Manager Engine 
+-------------------------
+
+- The Engine instances can be individually accessed via the following DNS names from within your Kubernetes cluster:
+{{ range untilStep 0 (int .Values.identityengine.replicaCount) 1 }}
+         {{ include "identity-manager.identityengine.name" $ }}-{{ . }}.{{ include "identity-manager.identityengine.name" $ }}.{{ $.Release.Namespace }}.svc.{{ $.Values.KUBE_SUB_DOMAIN }}
+{{ end }}
+- To allow access to the Engine service from outside of your Kubernetes cluster (from Designer, Sentinel etc.), each instance has been exposed via a Load Balancer IP Address.
+  
+  Run the following command to list the running Identity Manager Services:
+  
+         kubectl get service --namespace {{ .Release.Namespace }}
+  
+  Look for the "EXTERNAL-IP" column of the following services: 
+  {{ range untilStep 0 (int .Values.identityengine.replicaCount) 1 }}
+         {{ include "identity-manager.identityengine.name" $ }}-{{ . }}-external
+  {{ end }}  
+- Each Engine instance is listening on the following ports that are exposed for both the internal and external access of the Engine service:
+    
+         LDAP SSL port : {{ .Values.identityengine.service.ports.ldapsPort }}
+         NCP port      : {{ $.Values.identityengine.service.ports.ncpPort }}
+         HTTPS port    : {{ $.Values.identityengine.service.ports.httpsPort }}
+
+{{ if .Values.identityconsole.deploy }}     
+-------------------------
+Identity Console 
+-------------------------
+
+- Identity Console URL : https://{{ .Values.ingress.host }}/identityconsole
+
+- In the login page, enter the Identity Vault login credentials and the internal DNS name of the Engine instance you want to connect via Identity Console.
+
+  Example: To connect to the Engine instance {{ include "identity-manager.identityengine.name" . }}-0, enter the following credentials:
+
+         Username        : {{ .Values.identityengine.configuration.ID_VAULT_ADMIN_LDAP }}
+         Password        : *********
+         Server IP / DNS : {{ include "identity-manager.identityengine.name" . }}-0.{{ include "identity-manager.identityengine.name" . }}.{{ .Release.Namespace }}.svc.{{ .Values.KUBE_SUB_DOMAIN }}
+{{ end }}
+{{ if .Values.identityapplications.deploy }}     
+-------------------------
+Identity Applications 
+-------------------------
+
+- Identity Manager Dashboard URL => https://{{ .Values.ingress.host }}/idmdash
+{{ end }}
+{{ if .Values.identityreporting.deploy }}     
+-------------------------
+Identity Reporting 
+-------------------------
+
+- Identity Reporting URL => https://{{ .Values.ingress.host }}/IDMRPT
+
+- Data Collection Service URL => https://{{ .Values.ingress.host }}/idmdcs
+{{ end }}
+{{ if .Values.sspr.deploy }}     
+-----------------------------
+Self Service Password Reset 
+-----------------------------
+
+- SSPR URL => https://{{ .Values.ingress.host }}/sspr
+{{ end }}
+
+====================================================================================
+

@@ -1,0 +1,49 @@
+---
+# handlers file for fanoutagent role
+    - name: handler_for_message - temp_dir_target
+      debug:
+        msg: Temporary directory is created on Target Server
+        
+    - name: handler_for_message - check_iso_locally
+      debug:
+        msg: "{{ idm_48_iso_name }} is available on Control Server"
+      
+    - name: handler_for_message - build_download
+      debug:
+        msg: Build Downloaded Successfully
+    
+    - name: handler_for_message - copy_iso_to_target
+      debug:
+        msg: "{{ idm_48_iso_name }} is copied to Target Server"
+    
+    - name: handler_for_message - umount_iso_if_present
+      debug:
+        msg: "Previous ISO has been unmounted"
+        
+    - name: handler_for_message - build_mount
+      debug:
+        msg: Build Mounted Successfully
+        
+    
+    - name: handler_for_message - copy_foa_silent_prop
+      debug:
+        msg: Copied FOA Silent Properties file to Fanout Agent Server
+
+    - name: handler_for_message - install_foa
+      debug:
+        msg: Installed Fanout Agent on Target Server Successfully
+
+    - name: handler_for_task - remove_property_file
+      file:
+        path: "{{ build_dest_location}}/{{ silent_prop_foa }}"
+        state: absent
+        
+    - name: handler_for_message - rem_temp_dir_target
+      debug:
+        msg: Removed temporary directory from Target Server
+      
+    - name: handler_for_message - config_foa_as_per_db
+      debug:
+        msg: Configured Fanout Agent as per required database and started Fanout agent
+        
+...

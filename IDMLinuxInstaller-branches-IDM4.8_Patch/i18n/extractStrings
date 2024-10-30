@@ -1,0 +1,82 @@
+#!/bin/sh
+
+INPUT_FILE=scriptFiles
+MODULE_NAME=install
+outputFile=po/install.po
+# charsetset : iso-8859-1
+PROMPT_CONF=../cd-image/common/conf/prompts.conf
+
+create_po()
+{
+	file=$1
+	domain=$2
+	poname=`basename $file`
+	#outputFile=po/${poname}.po
+	#outputFile=po/install.po
+	touch $outputFile
+	grep gettext $file |sed 's/str.*=`gettext $domain //;s/`//;s/\"/printf(gettext(\"/;s/$/\)\)\;/' | xgettext --from-code=utf-8 -o ${outputFile} -j -c -a -
+}
+
+init_script_file()
+{
+	# truncate the existing file
+	>${INPUT_FILE}
+	find ../cd-image/ -name "*.sh" >> ${INPUT_FILE}
+	# special care for files without extension
+	echo "../cd-image/IDM/idm-nonroot-install" >> ${INPUT_FILE}
+	echo "../cd-image/IDM/idm-install-schema" >> ${INPUT_FILE}
+	# add an empty line
+	echo "" >> ${INPUT_FILE}
+}
+
+processScriptFiles()
+{
+	while read file
+	do
+		echo "Processing file : ${file}"
+		create_po ${file} ${MODULE_NAME}
+	done < "${INPUT_FILE}"
+}
+
+addToPo()
+{
+	text="$1"
+	if [ "${text}" = "" ]
+	then
+		echo "No prompt text for translation..."
+	else
+		echo "Extracting prompt entry : $text"
+		pentry="printf(gettext(\"${text}\"))"
+		echo ${pentry} | xgettext -o ${outputFile} -j -c -a -
+	fi
+}
+
+processPrompts()
+{
+	while read file
+	do
+		line=`echo ${file} | grep "|"`
+		result=$?
+		if [ ${result} -eq 0 ]
+		then
+			#echo "Processing : ${line}"
+			p1=`echo ${line} | awk -F "|" '{print $4}' | xargs`
+			addToPo "${p1}"
+			p2=`echo ${line} | awk -F "|" '{print $5}' | xargs`
+			addToPo "${p2}"
+		else
+			echo "Skipping non-prompt line..."
+		fi
+	done < "${PROMPT_CONF}"
+}
+
+main()
+{
+	>${outputFile}
+	init_script_file
+	processScriptFiles
+	processPrompts
+	sed -i "s/CHARSET/iso-8859-1/g" ${outputFile}
+}
+
+main

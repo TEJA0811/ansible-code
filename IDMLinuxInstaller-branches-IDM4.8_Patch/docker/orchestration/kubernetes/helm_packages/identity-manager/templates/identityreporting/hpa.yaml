@@ -1,0 +1,32 @@
+{{- if (include "identity-manager.identityreporting.deploy" .) }}
+
+{{- if .Values.identityreporting.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "identity-manager.identityreporting.name" . }}
+  labels:
+    {{- include "identity-manager.identityreporting.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "identity-manager.identityreporting.name" . }}
+  minReplicas: {{ .Values.identityreporting.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.identityreporting.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.identityreporting.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.identityreporting.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.identityreporting.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.identityreporting.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+
+{{- end }}

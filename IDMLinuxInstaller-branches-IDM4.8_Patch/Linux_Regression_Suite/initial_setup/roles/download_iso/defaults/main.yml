@@ -1,0 +1,28 @@
+---
+##################Temporary Location Details################################
+# build_src_location: /root/tmp
+# results_dir: /root/consolidate_reports
+
+##################IDM 4.8 Details###########################################
+# Information about IDM48 build can be found here
+# product_version: IDM 4.8
+#Modify the download link and other variables as per your requirement
+# idm_48_iso_url: 'http://blr-builder.labs.blr.novell.com/artifacts/Publish/IDM/IDM_4.8/IDM_4.8.0_FCS/IDM_Linux'
+# idm_48_iso_name: Identity_Manager_4.8_Linux.iso
+
+
+##################IDM 4.8 Service Pack Details##############################
+# Information about IDM48 service pack build can be found here
+# service_pack_version: IDM 4.8.6
+
+#Modify the download link and other variables as per your requirement
+# service_pack_iso_url: 'http://blr-idm-jenkins.labs.blr.novell.com:8080/job/IDM4.8_Patch/job/Engine/job/IDMLinuxInstaller_IDM4.8_Patch/lastSuccessfulBuild/artifact/'
+# service_pack_iso_name: Identity_Manager_4.8.6_Linux.iso
+
+#Note Below value will be automatically updated by Ansible
+# service_pack_iso_md5sum: 0d8ad8f3aaccd1b7b2898a0f1582ef73
+
+
+
+...
+

@@ -1,0 +1,13 @@
+version: 1
+
+dn:  ___USER_CONTAINER___
+changetype: modify
+add: ACL
+ACL: 7#subtree#[This]#pwmResponseSet
+-
+
+dn:  ___ADMIN_CONTAINER___
+changetype: modify
+add: ACL
+ACL: 7#subtree#[This]#pwmResponseSet
+-

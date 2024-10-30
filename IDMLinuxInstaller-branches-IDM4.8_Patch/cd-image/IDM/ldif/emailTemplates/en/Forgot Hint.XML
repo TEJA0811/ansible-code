@@ -1,0 +1,21 @@
+<html xmlns:form="http://www.novell.com/dirxml/workflow/form">
+  <form:token-descriptions>
+    <form:token-description item-name="Hint" description="User defined hint"/>
+    <form:token-description item-name="UserFullName" description="The user's full name"/>
+  </form:token-descriptions>
+<head>
+  <title>Your password hint request</title>
+  <style> <!-- body { font-family: Trebuchet MS } --> </style>
+</head>
+<body BGCOLOR="#FFFFFF">
+  <p>Dear $UserFullName$,</p>
+  <p>You have requested that your password hint be emailed to you. The password
+     hint is given below:</p>
+  <p>Hint: $Hint$</p>
+  <p>If you did not request that your hint be emailed to you, please contact the
+     help desk at (012) 345-6789 or email at
+     <a href="mailto:help.desk@mycompany.com">help.desk@mycompany.com</a></p>
+  <p> - Automated Security</p>
+  <p><img SRC="cid:powered_by_novell.gif" ALT="Powered by Novell" width="80" height="29"/></p>
+</body>
+</html>

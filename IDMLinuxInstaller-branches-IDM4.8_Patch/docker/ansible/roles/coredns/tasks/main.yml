@@ -1,0 +1,136 @@
+---
+# tasks file for CoreDNS
+
+- name : Get CoreDNS image file stats
+  local_action: stat path="{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_coredns.tar.gz"
+  register: corednsfile
+
+- name : Check for image existence in Docker host
+  shell : docker images | grep coredns | grep {{coredns_marketing_major}}.{{coredns_marketing_minor}}.{{coredns_marketing_revision}}
+  register : imagealreadyloaded
+  ignore_errors : yes
+
+- name : Copy CoreDNS image to Docker host
+  copy :
+          src : "{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_coredns.tar.gz"
+          dest : "{{ dns_shared_volume }}/"
+  when : 
+        - corednsfile.stat.exists
+        - imagealreadyloaded.rc == 1
+
+- name : Load the CoreDNS image
+  docker_image:
+    state : present
+    name: coredns:{{coredns_marketing_major}}.{{coredns_marketing_minor}}.{{coredns_marketing_revision}}
+    load_path: "{{dns_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_coredns.tar.gz"
+    timeout: 3000
+    source: load
+  notify : Pull CoreDNS image
+  when : imagealreadyloaded.rc == 1
+
+  
+- name : Create CoreDNS configuration folder inside shared volume
+  shell: |
+    if [ -d "{{ dns_shared_volume }}/coredns/" ]; then rm -Rf "{{ dns_shared_volume }}/coredns/"; fi
+    mkdir -p {{ dns_shared_volume }}/coredns/ 
+
+ 
+- name: Create CoreDNS corefile
+  copy:
+    dest: "{{dns_shared_volume}}/coredns/Corefile"
+    content: |
+      .:53 {
+          forward . 8.8.8.8 9.9.9.9
+          log
+          errors
+      }
+      {{ dns_domain_name }}:53 {
+          file /root/coredns.db
+          log
+          errors
+      }
+      
+
+
+- name: Create CoreDNS coredns.db
+  copy:
+    dest: "{{dns_shared_volume}}/coredns/coredns.db"
+    content: |
+      {{ dns_domain_name }}.        IN  SOA {{ dns_container_hostname }}. {{ dns_container_hostname }}. 2015082541 7200 3600 1209600 3600
+      {{ dns_container_hostname }}.    IN  A   {{ dns_container_ipaddress }}
+      
+- name : Add IDM Engine entry
+  shell: |
+    echo {{ engine_container_hostname }}.	IN	A	{{ engine_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: engine_deploy == "yes"
+  
+- name : Add Remote Loader entry
+  shell: |
+    echo {{ remoteloader_container_hostname }}.	IN	A	{{ remoteloader_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: remoteloader_deploy == "yes"
+  
+- name : Add Fanout Agent entry
+  shell: |
+    echo {{ fanoutagent_container_hostname }}.	IN	A	{{ fanoutagent_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: fanoutagent_deploy == "yes"
+  
+- name : Add OSP entry
+  shell: |
+    echo {{ osp_container_hostname }}.	IN	A	{{ osp_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: osp_deploy == "yes"
+    
+- name : Add Postgresql entry
+  shell: |
+    echo {{ postgres_container_hostname }}.	IN	A	{{ postgres_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: postgres_deploy == "yes"
+    
+- name : Add Identity Applications entry
+  shell: |
+    echo {{ identityapps_container_hostname }}.	IN	A	{{ identityapps_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: identityapps_deploy == "yes"
+
+- name : Add Form Renderer entry
+  shell: |
+    echo {{ formrenderer_container_hostname }}.	IN	A	{{ formrenderer_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: formrenderer_deploy == "yes"
+    
+- name : Add ActiveMQ entry
+  shell: |
+    echo {{ activemq_container_hostname }}.	IN	A	{{ activemq_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: activemq_deploy == "yes"
+    
+- name : Add Identity Reporting entry
+  shell: |
+    echo {{ rpt_container_hostname }}.	IN	A	{{ rpt_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: rpt_deploy == "yes"
+    
+- name : Add SSPR entry
+  shell: |
+    echo {{ sspr_container_hostname }}.	IN	A	{{ sspr_container_ipaddress }} >> "{{dns_shared_volume}}/coredns/coredns.db"
+  when: sspr_deploy == "yes"
+    
+- name : Add empty last line
+  shell: |
+    echo " " >> "{{dns_shared_volume}}/coredns/coredns.db"
+
+    
+- name : Deploy CoreDNS container
+  docker_container :
+    name : "{{ dns_container_name }}"
+    image : "coredns:{{ coredns_marketing_major }}.{{ coredns_marketing_minor }}.{{ coredns_marketing_revision }}"
+    state: started
+    stop_timeout: 300
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+        ipv4_address : "{{ dns_container_ipaddress }}"
+    volumes :
+      - "{{ dns_shared_volume }}/coredns/Corefile:/Corefile"
+      - "{{ dns_shared_volume }}/coredns/coredns.db:/root/coredns.db"
+    ports : "{{ dns_port_mapping | default([]) }}"
+
+- name : Delete CoreDNS tarball
+  file :
+          path : "{{dns_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_coredns.tar.gz"
+          state : absent
+          

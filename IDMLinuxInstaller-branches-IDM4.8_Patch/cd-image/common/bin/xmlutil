@@ -1,0 +1,29 @@
+#!/bin/bash
+##################################################################################
+#
+# Copyright © 2017 NetIQ Corporation, a Micro Focus company. All Rights Reserved.
+#
+##################################################################################
+
+# Get script directory
+LAUNCH_DIR=`pwd`
+cd `dirname $0`
+SCRIPT_DIR=`pwd`
+cd "${LAUNCH_DIR}"
+
+# Get working java
+JAVA_CMD="java"
+
+if [ -x "/opt/netiq/common/jre/bin/java" ]
+then
+    JAVA_HOME=/opt/netiq/common/jre
+    JAVA_CMD="${JAVA_HOME}"/bin/java
+fi
+
+# Run the replace
+# To replace, pass the following args
+# -replace <srcfile> <destfile> <srcxpath> <destxpath> <attrname> <comma seperated list of attrs to skip>
+#
+OUTPUT=`"${JAVA_CMD}" -cp "${SCRIPT_DIR}"/../packages/utils/idm_install_utils.jar com.netiq.installer.utils.XmlUtil "$@"`
+
+echo "$OUTPUT"

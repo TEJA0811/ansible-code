@@ -1,0 +1,39 @@
+---
+
+- name: 'Run BVT for Remote loader and Share Results'
+  hosts: rl
+  vars_files:
+    - ../../variables/versions.yml
+  roles:
+  - role:                     variables_idm
+    when:                     false
+  - role:                     bvt_rl
+    when:                     "groups[ 'rl' ] | length > 0 "
+  tags: run_bvt_rl
+
+# #Play to run XPOZ Automation
+# - name: 'Run XPOZ Automation on DTD and Share Results'
+#   hosts: xpoz_server
+#   roles:
+#   - role:                     variables_idm
+#     when:                     false
+#   - role:                     xpoz_rl
+#     when:                     "groups[ 'idmengine' ] | length > 0 and groups[ 'xpoz_server' ] | length > 0"
+#   tags: run_xpoz_engine
+
+#Play to remove temporary result directories
+- name: 'Remove temporary result directories'
+  hosts: control
+  tasks:
+  - name: "Remove BVT RL result directory"
+    file:
+      path: "./results_bvt"
+      state: absent
+    delegate_to: 'localhost'
+  - name: "Remove xpoz RL result directory"
+    file:
+      path: "./results_xpoz"
+      state: absent
+    delegate_to: 'localhost'
+  tags: remove_results_dir
+...

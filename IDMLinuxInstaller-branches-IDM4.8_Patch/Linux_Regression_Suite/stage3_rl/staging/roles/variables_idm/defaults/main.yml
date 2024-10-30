@@ -1,0 +1,34 @@
+---
+##################Temporary Location Details################################
+# defaults file for variables_idm
+# Location to which build is copied onto target server
+# build_dest_location: /root/tmp
+# build_src_location: /root/tmp
+
+# # Location on which build is mounted on target server
+# build_mount_location: /mnt
+
+# # Silent property file generated using create_silent_properties script
+# # For demo purposes,silent property file is bundled in variables_idm role files directory as below.
+# # For bringing up IDM, user need to just modify the inventory for all the required components.
+# # IDM gets installed in 'groups['engine'] server .
+# # def__idmProperties_file: "{{ role_path }}/files/sample_idm.properties"
+
+
+# ##################IDM 4.8 Service Pack Details##############################
+# # Information about IDM48 service pack build can be found here
+# service_pack_version: IDM 4.8.6
+# service_pack_iso_name: Identity_Manager_4.8.6_Linux.iso
+
+################### Esxi credentials#########################################
+esxi_hostname: 164.99.90.76
+esxi_username: acontroller
+esxi_password: netiq@321
+esxi_datacenter: ha-datacenter
+esxi_folder: /
+vm_snapshot_name: rl48
+#VM list
+vm_list:
+  - SLES15SP2-RL-S3
+...
+

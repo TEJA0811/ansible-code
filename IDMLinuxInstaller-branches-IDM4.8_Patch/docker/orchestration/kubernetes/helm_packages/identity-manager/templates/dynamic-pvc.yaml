@@ -1,0 +1,18 @@
+{{- if not .Values.persistence.shared.existingClaim  -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-idm-data-dynamic-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.persistence.shared.dynamicClaim.storageSize }}
+  storageClassName: {{ .Values.persistence.shared.dynamicClaim.storageClassName }}
+  {{- with .Values.persistence.shared.dynamicClaim.selector }}
+  selector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

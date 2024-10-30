@@ -1,0 +1,16 @@
+[all]
+
+[control]
+10.71.35.181
+
+
+[idconsole]
+10.71.35.84
+
+[mvn_server]
+10.71.35.185
+
+[IDC_node:vars]
+ansible_connection=ssh 
+ansible_ssh_user=root 
+ansible_ssh_pass=novell@123

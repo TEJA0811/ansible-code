@@ -1,0 +1,63 @@
+version: 1
+
+dn: o=data
+changetype: add
+o: data1
+objectClass: organization
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: ou=users,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+nspmpasswordpolicydn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+
+dn: ou=groups,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: ou=sa,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: ou=devices,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nsimAssignments
+nsimAssignments: o=data
+-
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+replace: nspmConfigurationOptions
+nspmConfigurationOptions: 884
+-
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nspmCaseSensitive
+nspmCaseSensitive: TRUE
+-
+
+dn: o=data
+changetype: modify
+add: nspmPasswordPolicyDN
+nspmPasswordPolicyDN: cn=Sample Password Policy,cn=Password Policies,cn=Security
+-
+

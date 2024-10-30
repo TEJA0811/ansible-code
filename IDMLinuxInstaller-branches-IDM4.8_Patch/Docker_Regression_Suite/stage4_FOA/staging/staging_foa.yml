@@ -1,0 +1,45 @@
+---
+#Play to deploy Identity Manager Role
+- name: 'Deploy Identity Manager Engine'
+  hosts: idmengine
+#  debugger: always
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     engine_patch
+    when:                     "(groups[ 'idmengine' ] | length > 0)"  
+  tags: idm_role_engine
+
+#Play to deploy AMQ
+- name: 'Deploy ActiveMQ'
+  hosts: activemq
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     activemq
+    when:                     "(groups[ 'activemq' ] | length > 0)"  
+  tags: amq_fresh_install
+
+#Play to deploy FOA
+- name: 'Deploy FOA'
+  hosts: foa
+  become: yes
+  become_method: sudo
+  tasks:
+  roles:
+  - role:                     fanoutagent
+    when:                     "(groups[ 'foa' ] | length > 0)"  
+  tags: foa_fresh_install
+  
+##Play to deploy FOA
+#- name: 'Deploy MSSQL'
+#  hosts: mssql
+#  become: yes
+#  become_method: sudo
+#  tasks:
+#  roles:
+#  - role:                     mssql
+#    when:                     "(groups[ 'mssql' ] | length > 0)"  
+#  tags: mssql_fresh_install
+  
+...

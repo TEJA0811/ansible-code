@@ -1,0 +1,95 @@
+---
+# tasks file for cef_audit
+
+# CEF auditing for OSP
+- name: "Copy idmuserapp_logging.xml file"
+  template:
+        src: "idmuserapp_logging.xml"
+        dest: "{{ osp_conf }}"
+        owner: messagebus
+        group: render
+        mode: '755'
+
+- name: Enable CEF auditing for OSP
+  shell: |
+    sed -i -e '/com\.netiq\.ism\.audit\.cef\.enabled =/ s/= .*/= true/'  -e '/com\.netiq\.ism\.audit\.cef\.host =/ s/= .*/= {{ groups['slm_iga'][0] }}/' -e '/com\.netiq\.ism\.audit\.cef\.port =/ s/= .*/= 1468/'   '{{ osp_conf }}/ism-configuration.properties'
+    docker restart "{{ osp_container_name }}"
+
+# CEF auditing for UserApps
+- name: "Copy idmuserapp_logging.xml file"
+  template:
+        src: "idmuserapp_logging.xml"
+        dest: "{{ uapp_conf }}"
+        owner: messagebus
+        group: render
+        mode: '755'
+
+- name: "Copy workflow_logging.xml file"
+  template:
+        src: "workflow_logging.xml"
+        dest: "{{ uapp_conf }}"
+        owner: messagebus
+        group: render
+        mode: '755'
+
+- name: "Add audit server details"
+  lineinfile:
+    path: "{{ uapp_conf }}/ism-configuration.properties"
+    state: present
+    line: "{{ item }}"
+  with_items:
+  - "com.netiq.ism.audit.cef.enabled = true"
+  - "com.netiq.ism.audit.cef.host = {{ groups['slm_iga'][0] }}"
+  - "com.netiq.ism.audit.cef.port = 1468"
+  - "com.netiq.ism.audit.cef.protocol = tcp"
+  - "com.netiq.ism.audit.cef.use-tls = false"
+
+- name: "Restart User apps container"
+  shell: |
+    docker restart "{{ identityapps_container_name }}"
+
+# CEF auditing for Idenitity Reporting
+
+- name: "Copy idmrptdcs_logging.xml file"
+  template:
+        src: "idmrptdcs_logging.xml"
+        dest: "{{ rpt_conf }}"
+        owner: messagebus
+        group: render
+        mode: '755'
+
+- name: "Copy idmrptcore_logging.xml file"
+  template:
+        src: "idmrptcore_logging.xml"
+        dest: "{{ rpt_conf }}"
+        owner: messagebus
+        group: render
+        mode: '755'
+
+- name: "Copy idmuserapp_logging.xml file"
+  template:
+        src: "idmuserapp_logging.xml"
+        dest: "{{ rpt_conf }}"
+        owner: messagebus
+        group: render
+        mode: '755'
+
+- name: Enable CEF auditing for Rpt
+  shell: |
+    sed -i -e '/ig.audit.rpt.syslog.enabled =/ s/= .*/= true/' -e '/ig.audit.rpt.syslog.host =/ s/= .*/= {{ groups['slm_iga'][0] }}/' -e '/ig.audit.rpt.syslog.port =/ s/= .*/= 1468/'  -e '/ig.audit.rpt.syslog.cache-dir =/ s/= .*/= \/opt\/netiq\/idm\/apps\/tomcat\//'  '{{ rpt_conf }}/ism-configuration.properties'
+    "docker exec -it {{ rpt_container_name }} rm -rf /opt/netiq/idm/apps/tomcat/tomcat.pid"
+  ignore_errors: true
+
+- name: "Copy SQL script to add views to RPT server"
+  copy:
+      src: "{{ role_path }}/files/views_postgres_483.sql"
+      dest: "{{ rpt_shared_volume }}/postgres/views_postgres_483.sql"
+
+- name: "Add views to Postgres DB"
+  shell: |
+        docker exec -it "{{ postgres_container_name }}" psql -U postgres -d idmrptdb -a -f /config/postgres/views_postgres_483.sql
+        docker restart "{{ rpt_container_name }}"
+
+- name: "Pause for 1 min until Tomcat restarts"
+  pause:
+    minutes: 1

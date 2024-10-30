@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: edir
+  name: edir-vol
+spec:
+  nodeSelector: 
+    kubernetes.io/hostname: kubernetes-slave-16254
+  hostNetwork: true
+  containers:
+    - name: edir-container
+      image: "164.99.163.225/sashwin/sles12sp2-engine47"
+      volumeMounts:
+        - name: data
+          mountPath: /var/opt/novell/eDirectory
+      env:
+      - name: UPGRADE_IDM
+        value: 'n'
+      - name: IS_ADVANCED_EDITION
+        value: 'true'
+      - name: INSTALL_ENGINE
+        value: 'true'
+      - name: INSTALL_IDVAULT
+        value: 'true'
+      - name: IS_COMMON_PASSWORD
+        value: 'y'
+      - name: COMMON_PASSWORD
+        value: 'novell'
+      - name: TREE_CONFIG
+        value: 'newtree'
+      - name: ID_VAULT_PASSWORD
+        value: 'novell'
+      - name: ID_VAULT_EXISTING_SERVER
+        value: 'true'
+      - name: ID_VAULT_EXISTING_NCP_PORT
+        value: 'true'
+      - name: ID_VAULT_EXISTING_LDAPS_PORT
+        value: 'true'
+      - name: ID_VAULT_EXISTING_CONTEXTDN
+        value: 'true'
+      - name: ID_VAULT_TREENAME
+        value: 'engine47-vijay-tree'
+      - name: ID_VAULT_ADMIN_LDAP
+        value: 'cn=admin,ou=sa,o=system'
+      - name: ID_VAULT_ADMIN
+        value: 'admin.sa.system'
+      - name: ID_VAULT_PASSWORD
+        value: 'novell'
+      - name: ID_VAULT_VARDIR
+        value: '/var/opt/novell/eDirectory'
+      - name: ID_VAULT_DIB
+        value: '/var/opt/novell/eDirectory/data/dib'
+      - name: ID_VAULT_NCP_PORT
+        value: '524'
+      - name: ID_VAULT_LDAP_PORT
+        value: '389'
+      - name: ID_VAULT_LDAPS_PORT
+        value: '636'
+      - name: ID_VAULT_HTTP_PORT
+        value: '8028'
+      - name: ID_VAULT_HTTPS_PORT
+        value: '8030'
+      - name: ID_VAULT_CONF
+        value: '/etc/opt/novell/eDirectory/conf/nds.conf'
+      - name: ID_VAULT_DRIVER_SET
+        value: 'driverset1'
+      - name: ID_VAULT_DEPLOY_CTX
+        value: 'o=system'
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: task-pv-claim1
+

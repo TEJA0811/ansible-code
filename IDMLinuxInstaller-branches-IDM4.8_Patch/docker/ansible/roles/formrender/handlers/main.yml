@@ -1,0 +1,12 @@
+---
+# handlers file for formrenderer
+
+
+- name : Load Form Renderer image
+  debug :
+    msg : Form Renderer image is loaded successfully
+
+- name : Deploy Form Renderer Container
+  debug :
+    msg : Form Renderer Container is deployed successfully
+

@@ -1,0 +1,33 @@
+---
+#Play to run BVT on IDConsole
+- name: "Run BVT on IDM Engine and Share Results"
+  hosts: IDC_node
+  become: yes
+  become_method: sudo
+  vars_files:
+    - ../../variables/versions.yml
+  roles:
+    - role: bvt_IDC
+      when: "groups[ 'IDC_node' ] | length > 0"
+  tags: run_bvt_IDC
+  
+#Play to run Rest API Automation
+- name: 'Run Rest API Automation for IDConsole and Share Results'
+  hosts: mvn_server
+  roles:
+  - role:                     variables_IDC
+    when:                     false
+  - role:                     restAPI_IDC
+    when:                     "groups[ 'IDC_node' ] | length > 0"
+  tags: run_restapi_auto
+    
+#Play to remove temporary result directories
+- name: 'Remove temporary result directories'
+  hosts: control
+  tasks:
+  - name: "Remove bvt result directory"
+    file:
+      path: "./results_bvt"
+      state: absent
+  tags: remove_results_dir
+...

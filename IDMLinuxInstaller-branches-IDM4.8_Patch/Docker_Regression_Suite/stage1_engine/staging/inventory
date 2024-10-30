@@ -1,0 +1,17 @@
+[all]
+
+[control]
+10.71.35.181
+
+[idmengine]
+10.71.35.182
+
+[idmengine:vars]
+ansible_connection=ssh 
+ansible_ssh_user=root 
+ansible_ssh_pass=novell@123
+
+[Pipeline:children]
+idmengine
+
+[Pipeline:vars]

@@ -1,0 +1,14 @@
+---
+  
+#Play to download IDM iso
+- name: 'Download IDM48X images'
+  hosts: control
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     download_images
+  tags: download_iso
+  
+...
+
+

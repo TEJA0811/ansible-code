@@ -1,0 +1,34 @@
+---
+# handlers file for foa_patch
+    - name: handler_for_message - umount_iso_if_present
+      debug:
+        msg: "Previous ISO has been unmounted"
+
+    - name: handler_for_message - temp_dir_target
+      debug:
+        msg: "Temporary directory is created on Target Server"
+
+    - name: handler_for_message - check_iso_locally
+      debug:
+        msg: "{{ service_pack_iso_name }} is available on Control Server"
+
+    - name: handler_for_message - build_download
+      debug:
+        msg: "Build Downloaded Successfully on Control Server"
+
+    - name: handler_for_message - copy_iso_to_target
+      debug:
+        msg: "{{ service_pack_iso_name }} is copied to Target Server"
+        
+    - name: handler_for_message - build_mount
+      debug:
+        msg: "Build Mounted Successfully on Target Server"
+        
+    - name: handler_for_message - copy_silent_prop_patch_foa
+      debug:
+        msg: "Patch Silent Properties file copied to Target Server"
+
+    - name: handler_for_message - update_foa
+      debug:
+        msg: "Fanout Agent is updated on Target Server"
+

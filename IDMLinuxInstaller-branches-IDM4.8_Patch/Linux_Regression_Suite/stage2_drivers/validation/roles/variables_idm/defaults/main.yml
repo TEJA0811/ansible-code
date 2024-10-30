@@ -1,0 +1,7 @@
+---
+def__idmProperties_file: "{{ role_path }}/files/sample_idm.properties"
+build_dest_location: /root/tmp
+results_dir: /root/consolidate_reports
+
+...
+

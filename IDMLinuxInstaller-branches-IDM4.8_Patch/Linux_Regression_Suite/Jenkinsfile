@@ -1,0 +1,204 @@
+//define variable
+def RELEASE = "4.8.5.0"
+def BUILD_NUMBER = "$BUILD_NUMBER"
+
+
+pipeline
+{
+agent none
+
+options { 
+    buildDiscarder(logRotator(numToKeepStr: '10')) 
+    disableConcurrentBuilds()
+}
+
+stages
+{
+    stage("Initial setup")
+    {
+        agent { label 'sles15sp2-rajat-248'}
+        options { skipDefaultCheckout() }
+        steps
+        {  
+            cleanWs()
+            checkout scm
+            stash includes: 'pipeline/', name:'pipeline'
+            sh 'pipeline/initial_setup.sh'
+        }
+    }
+    stage("Staging step")
+    {
+        parallel
+        {
+            stage("Staging Engine for XPOZ and BVT Validation")
+            {
+                agent { label 'sles15sp2-rajat-248'}
+                options { skipDefaultCheckout() }
+                steps
+                {  
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage1_engine_staging.sh'
+                }
+            }
+            stage("Staging DTD for drivers Validation")
+            {
+                agent { label 'sles15sp2-rajat-248' }
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    cleanWs()
+            	    unstash 'pipeline'
+                    sh 'pipeline/stage2_driver_staging.sh'
+                }
+            }
+            stage("Staging DTD for RL Validation")
+            {
+                //agent { label "sles15sp2-rajat-248" }
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    echo "Stage RL for validation"; 
+                    
+                }
+            }
+            stage("Staging JDBC for Fanout Agent Validation")
+            {
+                agent { label "sles15sp2-rajat-248" }
+                options { skipDefaultCheckout() }
+                steps
+                {  
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage4_foa_staging.sh' 
+                }
+            }
+            stage("Staging ID Console for Validation")
+            {
+                agent { label "sles15sp2-rajat-248" }
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage5_idc_staging.sh'  
+                    
+                }
+            }
+            stage("Staging Identity reporting for RESTAutomation Validation")
+            {
+                agent { label "sles15sp2-rajat-248" }
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage6_rpt_staging.sh' 
+                }
+            }
+            
+        }
+    }
+    
+    stage("Validation step")
+    {
+        parallel
+        {
+            stage("Run XPOZ and BVT validation for Engine")
+            {
+                agent { label 'sles15sp2-rajat-248'}
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    cleanWs()
+              		unstash 'pipeline'
+                    sh 'pipeline/stage1_engine_validation.sh'
+                }
+            }
+            stage("Run DTD validation for drivers")
+            {
+                agent { label 'sles15sp2-rajat-248'}
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage2_driver_validation.sh'
+                }
+            }
+            stage("Run DTD validation for RL")
+            {
+                agent { label "sles15sp2-rajat-248" }
+                options { skipDefaultCheckout() }
+                steps
+                {  
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage3_rl_validation.sh'
+                }
+            }
+            stage("Run JDBC validation for Fanout Agent")
+            {
+                agent { label 'sles15sp2-rajat-248' }
+                options { skipDefaultCheckout() }
+                steps
+                {  
+                    cleanWs()
+              		unstash 'pipeline'
+                    sh 'pipeline/stage4_foa_validation.sh'
+                }
+            }
+            stage("Run ID console validation")
+            {
+                agent { label "sles15sp2-rajat-248" }
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage5_idc_validation.sh'
+                }
+            }
+            stage("Run Identity reporting validation")
+            {
+                agent { label "sles15sp2-rajat-248" }
+                options { skipDefaultCheckout() }
+                steps
+                {   
+                    cleanWs()
+            		unstash 'pipeline'
+                    sh 'pipeline/stage6_rpt_validation.sh'
+                }
+            }
+            
+        }
+    }
+    stage("Consolidated Report")
+    {
+        agent { label 'sles15sp2-rajat-248'}
+        options { skipDefaultCheckout() }
+        steps
+        {  
+            cleanWs()
+            unstash 'pipeline'
+            sh 'pipeline/consolidation_step.sh'
+            archiveArtifacts artifacts: "consolidate_reports/**/*", fingerprint: true, followSymlinks: false
+        }
+    }
+}
+
+post 
+{
+    failure {
+            mail to: 'rajamohan.neelam@microfocus.com, rajat.kalsotra@microfocus.com, shanmukhpawan.moparthi@microfocus.com, kiran.mb@microfocus.com',
+            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+            body: "Hi Team,\n\nSomething went wrong with your pipeline job.\n\nPipeline Stage View : $RUN_DISPLAY_URL\n\nPlease have a check and resolve the same.\n\nThanks,\nIDM-QA Team"
+             }
+    success {
+            mail to: 'rajamohan.neelam@microfocus.com, rajat.kalsotra@microfocus.com, shanmukhpawan.moparthi@microfocus.com, kiran.mb@microfocus.com',
+            subject: "Successful Pipeline: $BUILD_NUMBER",
+            body: "Hi Team,\n\nPipeline Job is now completed.\n\nPipeline Stage View : $RUN_DISPLAY_URL\n\nThanks,\nIDM-QA Team"
+            }
+      
+    }
+}

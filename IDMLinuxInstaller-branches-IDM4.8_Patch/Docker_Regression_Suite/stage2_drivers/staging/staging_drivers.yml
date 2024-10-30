@@ -1,0 +1,25 @@
+---
+
+  
+#Play to deploy Identity Manager Role
+
+#Play to clean docker host for Identity Manager Role
+- name: 'Clean docker host'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     cleanup
+    when:                     "(groups[ 'idmengine' ] | length > 0)"  
+  tags: idm_role_cleanup
+
+- name: 'Deploy Identity Manager Engine'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     engine
+    when:                     "(groups[ 'idmengine' ] | length > 0)"  
+  tags: idm_role_engine
+  
+...

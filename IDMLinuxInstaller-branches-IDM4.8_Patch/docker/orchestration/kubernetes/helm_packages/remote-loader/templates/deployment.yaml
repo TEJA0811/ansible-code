@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-rl
+  labels:
+    {{- include "remoteloader.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "remoteloader.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "remoteloader.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.images.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "remoteloader.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-{{ .Release.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if .Values.images.registry }}
+          image: "{{ .Values.images.registry }}/{{ .Values.images.remoteloader.repository }}:{{ .Values.images.remoteloader.tag }}"
+          {{- else }}
+          image: "{{ .Values.images.remoteloader.repository }}:{{ .Values.images.remoteloader.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          env:
+            - name: RL_DRIVER_STARTUP
+              value: {{ .Values.driverStartupFileName }}
+          ports:
+          {{- range $port := .Values.service.ports }}
+            - name: port-{{ $port }}
+              containerPort: {{ $port }}
+              protocol: TCP
+          {{- end }}
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            exec:
+#             command:
+#              - cat 
+#             - /opt/netiq/idm/apps/tomcat/logs/catalina.out
+#           failureThreshold: 180
+#            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /config
+      volumes:  
+        - name: data
+        {{- if .Values.persistence.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+        {{- else }}    
+          persistentVolumeClaim: 
+            claimName: {{ .Release.Name }}-rl-dynamic-pvc
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

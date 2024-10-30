@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<settings>
+    <setting key="ldap.serverUrls" profile="default" syntax="STRING_ARRAY">
+      <value><![CDATA[ldaps://___ID_VAULT_HOST___:___ID_VAULT_LDAPS_PORT___]]></value>
+    </setting>
+    <setting key="ldap.proxy.username" profile="default" syntax="STRING">
+      <value><![CDATA[___ID_VAULT_ADMIN_LDAP___]]></value>
+    </setting>
+    <setting key="ldap.proxy.password" profile="default" syntax="PASSWORD" syntaxVersion="0">
+      <label>LDAP Proxy Password</label>
+      <value plaintext="true">___ID_VAULT_PASSWORD___</value>
+    </setting>
+    <setting key="ldap.rootContexts" profile="default" syntax="STRING_ARRAY">
+      <value><![CDATA[___USER_CONTAINER___]]></value>
+      <value><![CDATA[___ADMIN_CONTAINER___]]></value>
+    </setting>
+    <setting key="interface.theme" syntax="SELECT">
+      <value>mdefault</value>
+    </setting>
+    <setting key="oauth.idserver.loginUrl" syntax="STRING">
+      <value><![CDATA[https://___SSO_SERVER_HOST___:___SSO_SERVER_PORT___/osp/a/idm/auth/oauth2/auth]]></value>
+    </setting>
+    <setting key="oauth.idserver.codeResolveUrl" syntax="STRING">
+      <value><![CDATA[https://___SSO_SERVER_HOST___:___SSO_SERVER_PORT___/osp/a/idm/auth/oauth2/authcoderesolve]]></value>
+    </setting>
+    <setting key="oauth.idserver.attributesUrl" syntax="STRING">
+      <value><![CDATA[https://___SSO_SERVER_HOST___:___SSO_SERVER_PORT___/osp/a/idm/auth/oauth2/getattributes]]></value>
+    </setting>
+    
+    <setting key="security.redirectUrl.whiteList" syntax="STRING_ARRAY">
+      <value><![CDATA[https://___TOMCAT_SERVLET_HOSTNAME___:___TOMCAT_HTTPS_PORT___]]></value>
+    </setting>
+    <setting key="pwm.selfURL" syntax="STRING">
+      <value><![CDATA[https://___TOMCAT_SERVLET_HOSTNAME___:___TOMCAT_HTTPS_PORT___/sspr]]></value>
+    </setting>
+    <setting key="oauth.idserver.clientName" syntax="STRING">
+      <value><![CDATA[sspr]]></value>
+    </setting>
+    <setting key="oauth.idserver.secret" syntax="PASSWORD" syntaxVersion="0">
+      <label>OAuth Shared Secret</label>
+      <value plaintext="true">___SSO_SERVICE_PWD___</value>
+    </setting>
+    <setting key="oauth.idserver.dnAttributeName" syntax="STRING">
+      <value><![CDATA[name]]></value>
+    </setting>
+    <setting key="display.homeButton" syntax="BOOLEAN">
+      <value>false</value>
+    </setting>
+    <setting key="logoutAfterPasswordChange" syntax="BOOLEAN">
+      <value>false</value>
+    </setting>
+    <setting key="password.policy.checkWordlist" profile="default" syntax="BOOLEAN">
+      <value>false</value>
+    </setting>
+    <setting key="password.change.requireCurrent" syntax="SELECT">
+      <value>TRUE</value>
+    </setting>
+    <setting key="password.policy.source" syntax="SELECT">
+      <value>LDAP</value>
+    </setting>
+    <setting key="password.policy.disallowedValues" profile="default" syntax="STRING_ARRAY"/>
+    <setting key="template.ldap" syntax="SELECT" syntaxVersion="0">
+      <label>LDAP Vendor Default Settings</label>
+      <value>NOVL_IDM</value>
+    </setting>
+    <setting key="pwm.forwardURL" syntax="STRING">
+      <value><![CDATA[https://___SSO_SERVER_HOST___:___SSO_SERVER_PORT___/idmdash/#/landing]]></value>
+    </setting>
+    <setting key="pwm.logoutURL" syntax="STRING">
+      <value><![CDATA[https://___SSO_SERVER_HOST___:___SSO_SERVER_PORT___/osp/a/idm/auth/app/logout?target=https://___TOMCAT_SERVLET_HOSTNAME___:___TOMCAT_HTTPS_PORT___/sspr]]></value>
+    </setting>
+	<setting key="pwmAdmin.queryMatch" syntax="USER_PERMISSION" syntaxVersion="2" >
+      <label>Administrator Permission</label>
+      <value>{"ldapProfileID":"default","ldapQuery":"(objectClass=*)","ldapBase":"___ID_VAULT_ADMIN_LDAP___"}</value>
+      <value>{"ldapProfileID":"default","ldapQuery":"(objectClass=*)","ldapBase":"___UA_ADMIN___"}</value>
+    </setting>
+	<setting hidden="false" key="nodeService.enable" level="2">
+      <value>false</value>
+    </setting>
+</settings>

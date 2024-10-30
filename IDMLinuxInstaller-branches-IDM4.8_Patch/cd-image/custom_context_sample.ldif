@@ -1,0 +1,91 @@
+version: 1
+
+dn: o=data
+changetype: add
+o: data1
+objectClass: organization
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: ou=users,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+nspmpasswordpolicydn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+
+dn: ou=groups,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: ou=sa,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: ou=devices,o=data
+changetype: add
+objectClass: organizationalUnit
+objectClass: ndsLoginProperties
+objectClass: ndsContainerLoginProperties
+objectClass: Top
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nsimAssignments
+nsimAssignments: o=data
+-
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+replace: nspmConfigurationOptions
+nspmConfigurationOptions: 884
+-
+
+dn: cn=Sample Password Policy,cn=Password Policies,cn=Security
+changetype: modify
+add: nspmCaseSensitive
+nspmCaseSensitive: TRUE
+-
+
+dn: o=data
+changetype: modify
+add: nspmPasswordPolicyDN
+nspmPasswordPolicyDN: cn=Sample Password Policy,cn=Password Policies,cn=Security
+-
+
+dn: cn=uaadmin,ou=sa,o=data
+changetype: add
+sn: Administrator
+givenName: UserApplication
+userpassword: novell
+objectClass: inetOrgPerson
+objectClass: Person
+objectClass: ndsLoginProperties
+objectClass: Top
+objectClass: srvprvEntityAux
+
+dn: o=data
+changetype: modify
+add: ACL
+ACL: 1#subtree#[Root]#[Entry Rights]
+ACL: 3#subtree#o=data#description
+ACL: 3#subtree#o=data#directReports
+ACL: 3#subtree#o=data#mail
+ACL: 3#subtree#o=data#manager
+ACL: 3#subtree#o=data#photo
+ACL: 3#subtree#o=data#srvprvQueryList
+ACL: 3#subtree#o=data#srvprvUserPrefs
+ACL: 3#subtree#o=data#telephoneNumber
+ACL: 3#subtree#o=data#title
+ACL: 17#subtree#cn=uaadmin,ou=sa,o=data#[Entry Rights]
+ACL: 35#subtree#cn=uaadmin,ou=sa,o=data#[All Attributes Rights]
+-
+

@@ -1,0 +1,41 @@
+#---
+## tasks file for cleanup
+#
+#- name: "Stop container: {{engine_container_name }}"
+#  docker_container:
+#    name: "{{engine_container_name }}"
+#    state: stopped
+#  ignore_errors: yes
+#    
+#- name: "Remove container: {{engine_container_name }}"
+#  docker_container:
+#    name: "{{engine_container_name }}"
+#    state: absent
+#    
+#- name: "Remove image: idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}"
+#  docker_image:
+#    state: absent
+#    name: "identityengine"
+#    tag: "idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}"
+#    
+#- name: "Remove shared volume: {{ engine_shared_volume }}"
+#  file:
+#    path: "{{ engine_shared_volume }}"
+#    state: absent
+#    mode: '644'
+---
+# tasks file for cleanup
+
+- name: "Stop and remove all running containers"
+  shell: "docker rm -f $(docker ps -a -q)"
+  ignore_errors: true
+
+- name: "Remove all docker images"
+  shell: "docker rmi $(docker images -a -q)"
+  ignore_errors: true
+    
+- name: "Remove shared volume: {{ engine_shared_volume }}"
+  file:
+    path: "{{ engine_shared_volume }}"
+    state: absent
+    mode: '644'

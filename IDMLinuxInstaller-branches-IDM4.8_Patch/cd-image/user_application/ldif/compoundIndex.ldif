@@ -1,0 +1,14 @@
+version: 1
+
+dn: ___NCP_SERVER_DN___
+changetype: modify
+add: indexdefinition
+indexdefinition: 0$GnSnIndex$0$0$0$1$Given Name$Surname
+indexdefinition: 0$SnGnIndex$0$0$0$1$Surname$Given Name
+indexdefinition: 0$CnSnIndex$0$0$0$1$CN$Surname
+indexdefinition: 0$TitleSnIndex$0$0$0$1$Title$Surname
+indexdefinition: 0$OuSnIndex$0$0$0$1$OU$Surname
+indexdefinition: 0$LSnIndex$0$0$0$1$L$Surname
+indexdefinition: 0$mailSnIndex$0$0$0$1$Internet EMail Address$Surname
+indexdefinition: 0$telephoneNumberSnIndex$0$0$0$1$Telephone Number$Surname
+-

@@ -1,0 +1,7 @@
+---
+# handlers file for common
+
+
+- name : handler_for_message - convert_property2yaml
+  debug :
+    msg : silent.properties file is converted to yaml file

@@ -1,0 +1,25 @@
+{{- if (include "identity-manager.activemq.deploy" .) }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "identity-manager.activemq.name" . }}
+  annotations:
+    {{- toYaml .Values.activemq.service.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.activemq.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.activemq.service.type }}
+  ports:
+    - port: {{ .Values.activemq.service.ports.tcpPort }}
+      targetPort: tcp-port
+      protocol: TCP
+      name: tcp
+    - port: {{ .Values.activemq.service.ports.webConsolePort }}
+      targetPort: webconsole-port
+      protocol: TCP
+      name: webconsole
+  selector:
+    {{- include "identity-manager.activemq.selectorLabels" . | nindent 4 }}
+
+{{- end }}

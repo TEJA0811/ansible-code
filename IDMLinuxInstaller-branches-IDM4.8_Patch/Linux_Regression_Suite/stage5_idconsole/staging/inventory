@@ -1,0 +1,17 @@
+[all]
+
+[control]
+10.71.34.248  ansible_connection=local
+
+
+[IDC_node]
+#10.71.131.139
+#10.71.128.199
+10.71.35.84
+
+[IDC_node:vars]
+ansible_connection=ssh 
+ansible_ssh_user=root 
+ansible_ssh_pass=novell@123
+
+

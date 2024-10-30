@@ -1,0 +1,115 @@
+---
+# tasks file for bvt_engine
+
+    - name: "Create Automation Directory for BVT"
+      file:
+          path: "/tmp/Automation"
+          state: directory
+          mode: '644'
+          
+    - name: "Copy Version Check script to Automation Directory"
+      template:
+           src: "bvt_engine.sh"
+           dest: "/tmp/Automation"
+           owner: root
+           group: root
+           mode: '777'
+           
+    - name: "Creates results Directory"
+      file:
+        path: "{{ playbook_dir}}/results_bvt"
+        state: directory
+        mode: '644'
+      delegate_to: localhost
+        
+    - name: "Run Version Check Script on BVT IDM Engine"
+      shell: |
+          cd /tmp/Automation
+          sh bvt_engine.sh
+    
+ 
+    - name: "Fetch log files from BVT IDM Engine Server to Ansible Controller"
+      fetch:
+        src: "{{ item }}"
+        dest: "{{ playbook_dir}}/results_bvt/"
+        flat: yes
+      with_items:
+             - /var/opt/novell/eDirectory/log/nds-install.log
+             - /var/opt/novell/eDirectory/log/ndsd.log
+             - /var/opt/netiq/idm/log/idminstall.log
+             - /var/opt/netiq/idm/log/idmconfigure.log 
+             - /var/opt/netiq/idm/log/idmupgrade.log 
+             - /tmp/Automation/current.txt
+             - /tmp/Automation/result
+             - /tmp/Automation/third.html
+             - /tmp/Automation/driver.html
+             - /tmp/Automation/bvt_result
+
+    - name: "Check for errors in log files"
+      shell: |
+            cd "{{ playbook_dir }}/results_bvt"
+            sh "{{ role_path }}/files/check_errors.sh"
+      delegate_to: localhost
+
+    - name: "Read Status of errors in Log files"
+      shell: |
+          cat "{{ playbook_dir}}/results_bvt/error_install_configure.log"
+      register: error_check_results
+      delegate_to: localhost
+
+#    - name: "Read Versions of installed components"
+#      shell: |
+#          cat "{{ playbook_dir}}/results_bvt/current.txt"
+#      register: version_results
+#      delegate_to: localhost
+      
+    - name: "Read version check results"
+      shell: |
+          cat "{{ playbook_dir}}/results_bvt/result"
+      register: results
+      delegate_to: localhost
+      
+    - name: "Generate Driver version check html report"
+      shell: |
+          cd "{{ playbook_dir }}/results_bvt"
+          cat ./../roles/bvt_engine/files/header.html driver.html ./../roles/bvt_engine/files/footer.html > BVT_Drivers.html
+      delegate_to: localhost
+      
+    - name: "Generate third party version check html report"
+      shell: |
+          cd "{{ playbook_dir }}/results_bvt"
+          cat ./../roles/bvt_engine/files/header.html third.html ./../roles/bvt_engine/files/footer.html > BVT_ThirdPartyJars_Engine.html
+      delegate_to: localhost
+
+    - name: "Copy files for consolidation"
+      copy:
+        src: "{{ item }}"
+        dest: "{{ results_dir }}/BVT_Engine/"
+        owner: root
+        group: root
+        mode: '644'
+      delegate_to: 'localhost'
+      with_items:
+        -  "{{ playbook_dir }}/results_bvt/BVT_Drivers.html"
+        -  "{{ playbook_dir }}/results_bvt/BVT_ThirdPartyJars_Engine.html"
+        -  "{{ playbook_dir }}/results_bvt/nds-install.log"
+        -  "{{ playbook_dir }}/results_bvt/ndsd.log"
+        -  "{{ playbook_dir }}/results_bvt/idminstall.log"
+        -  "{{ playbook_dir }}/results_bvt/idmconfigure.log"
+        -  "{{ playbook_dir }}/results_bvt/idmupgrade.log"
+        -  "{{ playbook_dir }}/results_bvt/error_install_configure.log"
+        -  "{{ playbook_dir}}/results_bvt/current.txt"
+        -  "{{ playbook_dir }}/results_bvt/bvt_result"
+
+    - name: "Clear temporary Files on Ansible Controller"
+      shell: |
+         cd "{{ playbook_dir }}"
+         rm -rf results_bvt
+      delegate_to: localhost
+    
+    - name: "Remove temporary directory on target server"
+      file:
+          path: "/tmp/Automation"
+          state: absent
+
+...

@@ -1,0 +1,1081 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<obj-container name="Server">
+	<container dbAccess="true">
+		<!-- Query -->
+		<application>Core</application>
+		<application>Base</application>
+		<application>Config</application>
+		<application>Correlation</application>
+		<application>Mapping</application>
+		<application>ZLists</application>
+		<application>Vulnerability</application>
+		<application>Incident</application>
+		<application>IncidentService</application>
+		<application>Asset</application>
+		<application>Health</application>
+		<application>AuditService</application>
+		<application>CorrelationManagementService</application>
+		<application>FormatterService</application>
+		<application>ExecuterService</application>
+		<application>EsecTaxonomyService</application>
+		<application>IdentityService</application>
+		<application>DataObjectAPIService</application>
+		<application>EventSourceManagement</application>
+		<application>ArchiveConfiguration</application>
+		<application>PluginRepository</application>
+		<application>ReportingService</application>
+		<application>Reporting</application>
+		<application>SessionServices</application>
+		<application>SentinelHealth</application>
+		<application>Integrators</application>
+		<application>EmailService</application>
+		<application>RawDataUtil</application>
+		<application>DataCollectionConfiguration</application>
+		<application>Tags</application>
+		<application>Filters</application>
+		<application>DistSearchConfig</application>
+		<application>EventDataSyncConfig</application>
+		<application>SentinelAgentConfig</application>
+		<application>NetflowData</application>
+		<application>CryptoService</application>
+		
+		<!-- Binary -->
+		<application>Event</application>
+		<application>EventSearch</application>
+		<application>IndexedLog</application>
+		<application>AlertStoreService</application>
+		<application>AlertSearchService</application>
+
+		<!-- Proxy -->
+		<application>ProxyServices</application>
+		
+		<!-- Collector Manager -->
+		<application>Agent</application>
+
+		<!-- Sentinel Primary -->
+		<application>SentinelHealth</application>
+		
+		<!-- Download Manager -->
+		<application>Download</application>
+
+		<!-- Advisor -->
+		<application>AdvisorStatusService</application>
+		<application>Advisor</application>
+
+		<!-- Active Views -->
+		<application>EventView</application>
+		
+		<!-- Need AgentPackage in order to allow for remote access from SCC/ESM of things defined in that application -
+			  CollectorPlugin, etc. -->
+		<application>AgentPackage</application>
+
+		<!-- Workflow --> 
+		<!-- Disabling this settings may have adverse effects on user creation and other
+				system functionality. This setting should only be changed under the direction
+				of Technical Services.-->
+		<application>WorkflowObjects</application>
+		<application>WorkflowServices</application>
+		<application>WorkflowTrigger</application>
+		<application>Activity</application>
+		
+		<!-- Scalable Storage --> 
+		<application>ScalableStorage</application>
+		
+		<application>OAuth2</application>
+		
+		<ConverterToXmlService>com.esecurity.workflow.objects.WorkflowXMLConverterService</ConverterToXmlService>
+		<ConverterToXmlService>com.esecurity.activity.ActivityXMLConverterService</ConverterToXmlService>
+		<impl object="iTracUserManagementService" class="com.esecurity.workflow.server.shark.SharkWorkflowProxyAdminService"/>
+	</container>
+
+	<obj-component id="SecurityProvider">
+		<class>esecurity.base.ccs.fips.SentinelFIPSProvider</class>
+		<property name="sentinelFipsLibDir">/usr/lib64/</property>
+		<property name="sentinelFipsDbDir">${security.nssdb.directory}</property>
+		<property name="jca.monitor.enable">true</property>
+	</obj-component>
+	<obj-component id="ConnectionManager">
+		<class>esecurity.base.ccs.comp.dataobject.ConnectionManager</class>
+		<property name="username">appuser</property>
+		<property name="password">jqhlWIX8HD6GDHVX9FApWg==</property>
+		<property name="hostname">localhost</property>
+		<property name="portnum">${postgresql.port.server}</property>
+		<property name="database">SIEM</property>
+		<property name="server">PostgreSQL</property>
+		<property name="maxConnections">50</property>
+		<property name="batchSize">50</property>
+		<property name="loadSize">20</property>
+		<property name="logAbandoned">false</property>
+	</obj-component>
+	
+	<obj-component id="SentinelIDHandler">
+		<class>esecurity.ccs.comp.proxycollector.common.UUIDHandler</class>
+		<property name="uuid_file">${esecurity.data.home}/data/sentinel.id</property>
+	</obj-component>
+
+	<!-- Query -->
+	<obj-component id="TimerThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">20</property>
+		<property name="minThreads">10</property>
+		<property name="waitBlocked">false</property>
+		<property name="maxThreadsQueued">100</property>
+	</obj-component>
+	<obj-component id="IndexedLogThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">4</property>
+		<property name="minThreads">4</property>
+		<property name="waitBlocked">true</property>
+		<property name="abortBlocked">false</property>
+		<property name="maxThreadsQueued">10</property>
+	</obj-component>
+	<obj-component id="SearchProviderThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">50</property>
+		<property name="minThreads">10</property>
+		<property name="waitBlocked">true</property>
+		<property name="maxThreadsQueued">5</property>
+	</obj-component>
+	<obj-component id="IndexWriterThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">8</property>
+		<property name="minThreads">4</property>
+		<property name="waitBlocked">true</property>
+		<property name="abortBlocked">false</property>
+		<property name="maxThreadsQueued">10</property>
+	</obj-component>
+	<obj-component id="WorklistThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">6</property>
+		<property name="minThreads">6</property>
+		<property name="waitBlocked">false</property>
+		<property name="maxThreadsQueued">1000</property>
+	</obj-component>
+	<obj-component id="RtTimerThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">5</property>
+		<property name="minThreads">5</property>
+		<property name="waitBlocked">false</property>
+		<property name="maxThreadsQueued">100</property>
+	</obj-component>
+	<obj-component id="RtEventSummaryThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">10</property>
+		<property name="minThreads">10</property>
+		<property name="waitBlocked">false</property>
+		<property name="maxThreadsQueued">1000</property>
+	</obj-component>
+	<obj-component id="DefaultThreadPool">
+		<class>esecurity.base.ccs.comp.threadpool.TaskThreadPool</class>
+		<property name="maxThreads">20</property>
+		<property name="minThreads">10</property>
+		<property name="waitBlocked">false</property>
+		<property name="maxThreadsQueued">100</property>
+	</obj-component>
+	<obj-component id="InitializerComponent">
+		<class>esecurity.base.ccs.comp.InitializerComponent</class>
+		<property name="dataObjectStorageMemoryPercent">15</property>
+		<property name="throttleCheckIntervalSec">900</property>
+	</obj-component>
+	<obj-component id="TimerService">
+		<class>esecurity.base.ccs.comp.timer.TimerServiceImpl</class>
+		<property name="StatsService">DispatcherStatsService</property>
+		<obj-component-ref>
+			<name>ThreadPool</name>
+			<ref-id>TimerThreadPool</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="RtTimerService">
+		<class>esecurity.base.ccs.comp.timer.TimerServiceImpl</class>
+		<obj-component-ref>
+			<name>ThreadPool</name>
+			<ref-id>RtTimerThreadPool</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="AuditService">
+	<class>esecurity.ccs.comp.audit.AuditManagerService</class>
+		<property name="SystemAudit.level.high">log, event</property>
+		<property name="SystemAudit.level.medium">log, event</property>
+		<property name="SystemAudit.level.low">log</property>
+		<property name="SystemAudit.level.off"/>
+		<property name="UserAudit.level.high">log, event</property>
+		<property name="UserAudit.level.medium">log, event</property>
+		<property name="UserAudit.level.low">log</property>
+		<property name="UserAudit.level.off"/>
+		<property name="AuditLogger.extraData.maxLength">1000</property>
+	</obj-component>
+	<obj-component id="TransientObjectManager">
+		<class>esecurity.ccs.comp.dataobject.TransientObjectManager</class>
+		<property name="janitor.interval">60000</property>
+	</obj-component>
+	<obj-component id="LogManagerRefreshService">
+		<class>esecurity.ccs.comp.logging.LogManagerRefreshService</class>
+		<property name="refreshInterval">10000</property>
+	</obj-component>
+	<obj-component id="PublisherService">
+		<class>esecurity.base.ccs.comp.publisher.PublisherServiceImpl</class>
+	</obj-component>
+	<obj-component id="WorkflowServer">
+		<class>com.esecurity.workflow.server.WorkflowServerComponent</class>
+		<property name="maxThreads">100</property>
+		<property name="admin.user">_WORKFLOW_SYSTEM</property>
+		<property name="mail.from">Sentinel_iTrac_Server</property>
+		<property name="default.mail.to"></property>
+		<property name="log.level">INFO</property>
+		<property name="workflow.shark.config.file">${esecurity.config.home}/config/Shark.conf</property>
+		<property name="workflow.server.zombie.autoclean">true</property>
+		<property name="workflow.server.zombie.interval">900000</property>
+	</obj-component>
+
+	<!-- Sentinel Primary -->
+	<!-- Sentinel Health Monitor (HMO) - Must appear before the Sentinel component -->
+	<obj-component id="SentinelHealthMonitor">
+		<class>esecurity.ccs.comp.sentinel.health.HealthMonitor</class>
+		<!-- Health indicator thresholds (in seconds) -->
+		<property name="IndicatorThresholds">5,15,30,120,240</property>
+		<obj-component-ref>
+			<name>EventPublisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="DispatchManager">
+		<class>esecurity.ccs.comp.dispatcher.CommDispatcherManager</class>
+		<property name="esecurity.communication.service">Server</property>
+		<property name="sentinel.audit.tenantName">${sentinel.audit.tenantName}</property>
+		<property name="EventPublisher.performanceEventChannel">ewizard_binary_event</property>
+		<property name="handler:esecurity.vulnerability.create">esecurity.ccs.cracker.VulnerabilityStoreCracker@infoblock.vulnerability</property>
+		<property name="handler:esecurity.vulnerability.query">esecurity.ccs.cracker.VulnerabilityQueryCracker@gui_vulnerability_request</property>
+
+		<property name="handler:esecurity.objectattrinfo.request">esecurity.ccs.cracker.ObjectAttrInfoRequestCracker@display_object_request</property>        
+		<property name="handler:esecurity.workflow.triggerchannel">esecurity.ccs.cracker.DataObjectRequestCracker@workflow_trigger</property>
+
+		<property name="handler:esecurity.configuration.request">esecurity.ccs.cracker.ConfigurationRequestCracker@configurations</property>
+		<property name="handler:esecurity.syncconfig.request">esecurity.ccs.cracker.ConfigurationRequestCracker@sync_cms_request</property> 
+		<property name="handler:esecurity.user.session.keepalive">esecurity.ccs.cracker.DataObjectRequestCracker@user_session_keepalive</property>
+		<property name="handler:esecurity.alert.remote.store">esecurity.ccs.cracker.AlertCracker@alert_channel,alert_update_channel</property>
+
+		<!--	Missing from das_core.xml Do we need these 
+		<property name="handler:esecurity.filter.request">esecurity.ccs.cracker.DataObjectRequestCracker@filter_request</property>	   
+
+		<property name="handler:esecurity.shutdown.request">esecurity.ccs.cracker.DataObjectRequestCracker@shutdown</property>
+		<property name="handler:esecurity.user.session.logoff.request">esecurity.ccs.cracker.DataObjectRequestCracker@user_session_logoff_request</property>
+		<property name="handler:esecurity.user.session.kill.request">esecurity.ccs.cracker.DataObjectRequestCracker@user_session_kill_request</property>
+		<property name="handler:esecurity.user.session.update.request">esecurity.ccs.cracker.DataObjectRequestCracker@user_session_request</property>
+
+		jgassner - I'm fairly certain we don't need the following:
+		<property name="handler:esecurity.login.request">esecurity.ccs.cracker.DataObjectRequestCracker@LOGIN_REQ</property>
+		
+		--> 
+		<!-- iTrac -->
+		<!-- We need this channel because its used for sending requests to execute activities manually -->
+		<property name="handler:esecurity.activity.request">esecurity.ccs.cracker.DataObjectRequestCracker@activity_request</property>
+
+		<!-- Query -->
+		<property name="handler:esecurity.shutdown.request">esecurity.ccs.cracker.DataObjectRequestCracker@shutdown</property>
+		<obj-component id="DispatcherStatsService">
+			<class>esecurity.ccs.comp.dispatcher.stats.DispatcherStatsManager</class>
+			<property name="ReportIntervals">150(2:6:24),3600(4:8:24)</property>
+			<property name="MinLogReportInterval">900</property>
+			<property name="MinPublishReportInterval">86400</property>
+			<property name="ReportByServiceName">true</property>
+			<property name="ReportByMethodName">true</property>
+			<property name="HeapWarningPercent">75</property>
+			<property name="HeapSeverePercent">90</property>	        
+			<obj-component-ref>
+				<name>EventPublisher</name>
+				<ref-id>DispatchManager</ref-id>
+			</obj-component-ref>
+			<obj-component-ref>
+				<name>DispatchManager</name>
+				<ref-id>DispatchManager</ref-id>
+			</obj-component-ref>
+		</obj-component>
+		<property name="handler:esecurity.remoterequest">esecurity.base.cracker.RemoteObjectRequestCracker@DYNAMIC_CHANNELS</property>
+		
+		<!-- Binary -->
+		<property name="handler:esecurity.event.create">esecurity.ccs.cracker.EventCracker@ewizard_binary_event,correlation_binary_event,database_tagged_event,correlation_binary_event_update</property>
+		<property name="handler:esecurity.rawdata.create">esecurity.ccs.cracker.EventCracker@raw_data</property>
+		
+		<!-- Collector Manager -->
+		<property name="handler:esecurity.asset.create">esecurity.ccs.cracker.DataObjectRequestCracker@infoblock.asset</property>
+
+		<!-- Sentinel Primary -->
+		<property name="handler:esecurity.advisor.query">esecurity.ccs.comp.advisor.service.AdvisorQueryRequestCracker@gui_advisor_request</property>
+
+	</obj-component>
+
+	<!-- The Sentinel component appears after the DisplayManager
+	because ActiveMQ is running in VM mode we need the DispatchManager to initialize the broker
+	before the Sentinel component starts up the webserver.
+	-->
+	<obj-component id="Sentinel">
+		<class>esecurity.ccs.comp.sentinel.SentinelService</class>
+		<obj-component-ref>
+			<name>EventPublisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+	</obj-component>
+
+	<!-- User and group cache must be initiated before Alert Buffer Service
+	as the latter uses the former's cache and the former must be ready by then.
+	-->
+	<obj-component id="UserAndGroupCache">
+	        <class>esecurity.ccs.comp.user.UserAndGroupCache</class>
+	</obj-component>
+<!--	
+	<obj-component id="AlertBufferService">
+		<class>esecurity.ccs.comp.alert.AlertBufferService</class>
+		<property name="limitAlertRate">${sentinel.alert.max.ratepersec}</property>
+		<property name="alert.queue.maxFile">20</property>
+		<property name="alert.queue.pageSize">500</property>
+    </obj-component>
+-->
+	<!-- Proxy -->
+	<obj-component id="ProxyService">
+		<class>esecurity.ccs.comp.clientproxy.ClientProxyService</class>
+		<property name="clientports">ssl:${clientproxyservice.port.client}</property>
+		<property name="certclientports">ssl:${clientproxyservice.port.certclient}</property>
+		<property name="keystore">${esecurity.config.home}/config/.proxyServerKeystore</property>
+		<property name="certificateAlias">SentinelProxyServer</property>
+	</obj-component>
+		
+	<obj-component id="ServiceManager">
+		<class>esecurity.base.datamodel.service.ServiceManagerComponent</class>
+		<property name="maxThreads">10</property>
+		<property name="minThreads">4</property>
+		<property name="maxThreadsQueued">100</property>
+	</obj-component>
+	 
+	<!--
+	NOTE: The seed data service needs to do its work BEFORE the IndexedLogComponent starts because
+	it has seed data (retention policies) that must be in the database in order for 
+	the indexed log partition manager to work correctly.  DO NOT MOVE THIS TO SOMEWHERE
+	AFTER IndexedLogComponent.
+	IMPORTANT: The assumption here is that CSeedDataService does all of its work
+	on the activation thread, so that components which follow it in this file
+	are not even started until it is finished.  SO DO NOT CHANGE CSeedDataService
+	TO SPIN OFF ANOTHER THREAD.
+	-->
+	<obj-component id="SentinelUpdater">
+		<class>esecurity.ccs.comp.seeddata.CSeedDataService</class>
+		<property name="baseDirectory">${esecurity.data.home}/data/updates</property>
+		<property name="pendingDirectory">pending</property>
+		<property name="doneDirectory">done</property>
+		<property name="errorDirectory">error</property>
+		<property name="maxRetry">5</property>
+	</obj-component>
+
+	<!-- Binary -->
+	<obj-component id="IndexedLogComponent">
+		<class>esecurity.ccs.comp.event.indexedlog.IndexedLogComponent</class>
+		<property name="CacheIndexReaders">false</property>
+		<!-- deprecated - use SearchProvider.SearchJobTimeToLive -->		
+		<property name="SearchJobTimeToLive">15</property>
+		<!-- deprecated - use SearchProvider.SearchJobTimeToLiveIfRunning -->
+		<property name="SearchJobTimeToLiveIfRunning">60</property>
+		<!-- deprecated - use SearchProvider.ForceCloseThreshold -->
+		<property name="ForceCloseThreshhold">90</property>
+		<!-- Size of the queue holding events to be written to disk. -->
+		<property name="LogQueueCapacity">50000</property>
+		<!-- Size of the queue holding events to be indexed once they are stored. Because indexing can be slow at times, queue
+				should be large so events will buffer up while indexing is slow. Does not actually hold events if memory is low, 
+				they will be freed and read from storage if memory gets low. -->
+		<property name="IndexQueueCapacity">50000</property>
+		<obj-component-ref>
+			<name>EventMessageProducer</name>
+			<ref-id>EventStoreService</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>ThreadPool</name>
+			<ref-id>EventStoreThreadPool</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	
+	<obj-component id="ConfigConverter">
+		<class>esecurity.ccs.comp.fips.ConfigConverter</class>
+	</obj-component>
+
+	<obj-component id="SearchProvider">
+		<class>esecurity.ccs.comp.event.search.ESearchProvider</class>
+		<!-- Minutes to allow search jobs to live without being accessed if they have finished gathering results. -->		
+		<property name="SearchJobTimeToLive">15</property>
+		<!-- Minutes to allow search job to live without being accessed if it is still running and gathering results. -->
+		<property name="SearchJobTimeToLiveIfRunning">60</property>
+		<!-- Percentage threshhold of maximum open files that will trigger automatic closing of search jobs.  When the number of
+				open files is greater than this threshhold, we will start automatically stopping search jobs.
+				For example, if maximum open files is 16384, and the FileOpenThreshhold is 90, we would start stopping search jobs
+				when we see that the number of open files is greater than 90% of 16384. -->
+		<property name="ForceCloseThreshold">90</property>
+		<!-- The maximum number of search results that will be sorted in memory. If the number of results to sort exceeds this number,
+			 results will be sorted by writing them to a temporary database table and then performing a select/order by on the results.
+		-->
+		<property name="InMemorySortLimit">1000000</property>
+		<!-- The maximum number of searches that can be active (running not completed) in a system at once. A user initiated search 
+				however will ignore this limit be allowed to proceed.
+		-->
+		<property name="MaxActiveSearches">5</property>
+		<obj-component-ref>
+			<name>ThreadPool</name>
+			<ref-id>SearchProviderThreadPool</ref-id>
+		</obj-component-ref>
+	</obj-component>
+
+	<!-- Binary DB Insert -->
+	
+	<!-- Create this AFTER the DBEventStore -->
+	<obj-component id="EventDataSyncer" >
+		<class>esecurity.ccs.comp.event.EventDataSyncer</class>
+		<obj-component-ref>
+			<name>EventProducer</name>
+			<ref-id>EventStoreService</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	
+	<!-- Binary -->
+	<obj-component id="TriggerErrorHandler">
+		<class>esecurity.ccs.comp.event.EventInsertErrorHandlerService</class>
+		<property name="cacheImpl">esecurity.ccs.comp.event.SmallFileMultiDirectoryEventMessageCache</property>
+		<property name="rootDirectory">${esecurity.data.home}/data/events/triggerErrorBuffer</property>
+		<property name="reportInterval">300</property>
+		<property name="takeDelaySec">60</property>
+		<property name="eventTimeoutSec">2000000000</property>
+		<property name="onlineCapacity">1000</property>
+		<property name="capacity">5368709120</property>
+	</obj-component>
+	<obj-component id="UUIDHandler">
+		<class>esecurity.ccs.comp.proxycollector.common.UUIDHandler</class>
+		<property name="uuid_file">${esecurity.data.home}/data/host.id</property>
+	</obj-component>
+	<obj-component id="LicenseCacheComponent">
+		<class>esecurity.ccs.comp.license.CLicenseCache</class>
+		<property name="license.hourtoprune">3</property>
+		<property name="license.daystokeep">365</property>
+		<property name="license.excludecollectors">B6AC9430-3F17-102C-90F4-001C251476ED</property>
+		<property name="license.tablename">license_record_hours</property>
+	</obj-component>
+	<obj-component id="EventStoreService">
+		<class>esecurity.ccs.comp.event.EventStoreService</class>
+		<property name="handler">esecurity.event.create</property>
+		<property name="throttleWarningPercent">75</property>
+		<property name="throttleSeverePercent">90</property>
+		<property name="sendThrottleEvents">true</property>
+		<property name="reportDelayStats">true</property>
+		<obj-component-ref>
+			<name>LicenseCache</name>
+			<ref-id>LicenseCacheComponent</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="RawDataConsumer">
+		<class>esecurity.ccs.comp.event.rawdata.RawDataConsumer</class>
+		<property name="rawdata.queue.maxFile">2147483647</property>
+		<property name="RawDataConsumer.maxThreads">20</property>
+		<property name="RawDataConsumer.maxOpenEventSources">${rawdata.sources.cachesize}</property>
+		<property name="RawDataConsumer.fileSpanMinutes">60</property>
+		<property name="RawDataConsumer.cleanup.interval">1440</property>	
+		<obj-component-ref>
+			<name>EventMessageProducer</name>
+			<ref-id>RawDataStoreService</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="RawDataStoreService">
+		<class>esecurity.ccs.comp.event.RawDataStoreService</class>
+		<property name="handler">esecurity.rawdata.create</property>
+		<property name="throttleWarningPercent">75</property>
+		<property name="throttleSeverePercent">90</property>
+		<property name="sendThrottleEvents">true</property>
+	</obj-component>
+	<obj-component id="RemoteRawDataRetriever">
+		<class>esecurity.ccs.comp.event.rawdata.RemoteRawDataRetriever</class>
+	</obj-component>
+
+	<!-- Collector Manager -->
+	<obj-component id="DispatchManagerEvents">
+		<class>esecurity.ccs.comp.dispatcher.CommDispatcherManager</class>
+		<property name="esecurity.communication.service">agentmanager_events</property>
+		<property name="EventPublisher.performanceEventChannel">ewizard_binary_event</property>
+		<obj-component id="DispatcherStatsService">
+			<class>esecurity.ccs.comp.dispatcher.stats.DispatcherStatsManager</class>
+			<property name="ReportIntervals">150(2:6:24),3600(4:8:24)</property>
+			<property name="MinLogReportInterval">900</property>
+			<property name="MinPublishReportInterval">86400</property>
+			<property name="ReportByServiceName">true</property>
+			<property name="ReportByMethodName">true</property>
+			<property name="HeapWarningPercent">75</property>
+			<property name="HeapSeverePercent">90</property>	        
+			<obj-component-ref>
+				<name>EventPublisher</name>
+				<ref-id>DispatchManager</ref-id>
+			</obj-component-ref>
+			<obj-component-ref>
+				<name>DispatchManager</name>
+				<ref-id>DispatchManager</ref-id>
+			</obj-component-ref>
+		</obj-component>
+	</obj-component>
+	
+	<!-- The ScalableStorageContextComponent must be located above the EventRouter, because the EventRouter is dependent 
+	     on the ScalableStorageContextComponent. -->
+	<obj-component id="ScalableStorageContextComponent">
+		<class>esecurity.ccs.comp.scalablestorage.ScalableStorageContextComponent</class>
+    </obj-component>
+
+	<!-- The EventTagEngine must be located above the Event Router because the event router is dependent on it.  -->
+	<obj-component id="EventTagEngine">
+		<class>esecurity.ccs.comp.tag.EventTagEngine</class>
+		<property name="tagEvents">true</property>
+		<property name="systemEventTagName">Sentinel</property>
+	</obj-component>
+	<obj-component id="SentinelForwardingService">
+		<class>esecurity.ccs.comp.forwardservice.SentinelForwardingService</class>
+	</obj-component>
+	
+	<obj-component id="TriggerPersistor">
+		<class>esecurity.ccs.comp.event.jdbc.JDBCEventStore</class>
+		<property name="insert.batchsize">1000</property>
+		<property name="insert.strategy">esecurity.ccs.comp.event.jdbc.JDBCFileLoadStrategy</property>
+
+		<!--	To use the standard JDBC load strategy with Postgres, keep insert.batchSize to 100
+				due to a bug in the postgres JDBC driver.
+		<property name="insert.batchsize">100</property>
+		<property name="insert.strategy">esecurity.ccs.comp.event.jdbc.JDBCLoadStrategy</property>
+		-->
+		<property name="insert.eventErrorHandler">TriggerErrorHandler</property>
+	</obj-component>
+
+	<!-- The EventRouter is in client mode so that all events consistently go through the EventRouterServer,
+			which will make sure the events are routed all all the services (and only the services) that need it.
+			This does mean that events going through this router will return immediately to the EventStoreServer in
+			the same container - for completeness I think this is a good idea in case there later becomes some other
+			listener on the bus that wants to receive all of the events (it can listen on the event router client channel).
+	-->
+	<obj-component id="EventRouter">
+		<class>esecurity.ccs.comp.router.SimpleEventRouter</class>
+		<property name="esecurity.router.mode">standalone</property>
+		<property name="esecurity.router.disable.compression">true</property>
+		<property name="routeInternally">true</property>
+		<property name="esecurity.router.disable.eventtransformation">false</property>
+		<property name="esecurity.router.filebuffer.prefixpath">eventrouter_standalone/</property>
+		<property name="router.sendToSentinelWithScalableStoreEnabled">false</property>
+
+		<obj-component-ref>
+			<name>DispatchManager</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventPublisher</name>
+			<ref-id>DispatchManagerEvents</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventRouterServer</name>
+			<ref-id>DispatchManagerEvents</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>ScalableStorageContextComponent</name>
+			<ref-id>ScalableStorageContextComponent</ref-id>
+        </obj-component-ref>
+	</obj-component>
+	<!-- The DeprecatedEventRouterClient is deprecated because the EventRouter
+		in standalone mode performs better.  The reason the DeprecatedEventRouterClient hasn't
+		been removed is for the upgrade case, where the DeprecatedEventRouterClient may
+		already have buffered data to disk.  Leaving this router here will allow it to
+		process the data in the disk buffer.
+	--> 
+	<obj-component id="DeprecatedEventRouterClient">
+		<class>esecurity.ccs.comp.router.EventRouter</class>
+		<property name="esecurity.router.mode">client</property>
+		<!-- Seconds between reporting batch statistics -->
+		<property name="esecurity.router.reportBatchStatsInterval">90</property>
+		<property name="esecurity.router.disable.compression">true</property>
+		<obj-component-ref>
+			<name>DispatchManager</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventPublisher</name>
+			<ref-id>DispatchManagerEvents</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventRouterClient</name>
+			<ref-id>DispatchManagerEvents</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="EventRouterServer">
+		<class>esecurity.ccs.comp.router.EventRouter</class>
+		<property name="esecurity.router.mode">server</property>
+		<property name="esecurity.router.disable.compression">true</property>
+		<property name="routeInternally">true</property>
+		<property name="esecurity.router.disable.eventtransformation">false</property>
+		<obj-component-ref>
+			<name>DispatchManager</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventPublisher</name>
+			<ref-id>DispatchManagerEvents</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventRouterServer</name>
+			<ref-id>DispatchManagerEvents</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="EventSourceManagerService">
+		<class>esecurity.ccs.comp.proxycollector.CEventSourceManagerService</class>
+		<obj-component-ref>
+			<name>Publisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="AssetStoreService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.asset.create</property>
+		<property name="maxThreads">100</property>	
+		<property name="task">esecurity.ccs.comp.asset.AssetStoreServiceTask</property>
+	</obj-component>    
+	<obj-component id="IncidentRequestService">
+		<class>esecurity.ccs.comp.incident.IncidentRequestService</class>
+		<obj-component id="Persistor">
+			<class>esecurity.ccs.comp.incident.jdbc.JDBCIncidentStore</class>
+		</obj-component>
+	</obj-component>
+	<obj-component id="VulnerabilityStoreService">
+		<class>esecurity.ccs.comp.vulnerability.VulnerabilityStoreService</class>
+		<obj-component id="Persistor">
+			<class>esecurity.ccs.comp.vulnerability.jdbc.JDBCVulnerabilityStore</class>
+		</obj-component>
+		<property name="maxThreads">20</property>
+		<property name="minThreads">10</property>
+	</obj-component>
+
+	<obj-component id="ObjectAttrInfosService">
+		<class>esecurity.ccs.comp.objectattr.ObjectAttrInfoService</class>
+		<obj-component id="Persistor">
+			<class>esecurity.ccs.comp.objectattr.jdbc.JDBCObjectAttrInfoStore</class>
+		</obj-component>
+		<property name="maxThreads">6</property>
+		<property name="minThreads">3</property>
+	</obj-component>
+	<obj-component id="AdvisorQueryService">
+		<class>esecurity.ccs.comp.advisor.service.AdvisorQueryService</class>
+		<obj-component id="Persistor">
+			<class>esecurity.ccs.comp.advisor.service.DataObjectAdvisorStore</class>
+			<property name="exploitAliasMap">${esecurity.config.home}/config/exploit_detect_data_generator.prop</property>
+		</obj-component>
+		<property name="maxThreads">20</property>
+		<property name="minThreads">10</property>
+	</obj-component>
+	<obj-component id="ExploitDetectDataGenerator">
+		<class>esecurity.ccs.comp.exploitdetect.ExploitDetectDataGenerator</class>
+		<property name="exploitDetectFile">exploitDetection.csv</property>
+		<property name="regenerateOnStartup">false</property>
+		<property name="exploitAliasMap">${esecurity.config.home}/config/exploit_detect_data_generator.prop</property>
+		<property name="minRegenerateInterval">1800000</property>
+		<property name="vulnToAttackMapSize">5000</property>
+		<property name="vulnToAttackMapValueSize">500</property>
+	</obj-component>
+	<obj-component id="IdentityMapGenerator">
+		<class>esecurity.ccs.comp.identity.IdentityMapGenerator</class>
+		<property name="identityMapFile">identityAccountMap.csv</property>
+		<property name="regenerateOnStartup">false</property>
+		<property name="minRegenerateInterval">600000</property>
+		<property name="maxRegenerateInterval">3600000</property>
+		<property name="calmTimeBetweenNotifications">30000</property>
+	</obj-component>
+	<obj-component id="ConfigurationService">
+		<class>esecurity.ccs.comp.config.ConfigurationStoreService</class>
+		<property name="maxThreads">100</property>
+		<property name="handler">esecurity.configuration.request</property>
+	</obj-component>    
+	<obj-component id="SyncConfigService">
+		<class>esecurity.ccs.comp.config.ConfigurationStoreService</class>
+		<property name="maxThreads">100</property>
+		<property name="handler">esecurity.syncconfig.request</property>
+	</obj-component>
+<!--
+	<obj-component id="AlertRemoteStoreService">
+		<class>esecurity.ccs.comp.alert.AlertRemoteStoreService</class>
+		<property name="maxThreads">100</property>
+		<property name="handler">esecurity.alert.remote.store</property>
+	</obj-component>
+-->
+	<!-- Adding the ActivityiService after its handler has registered with the Dispatch Manager --> 
+	<obj-component id="ActivityService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.activity.request</property>
+		<property name="maxThreads">100</property>
+		<property name="task">com.esecurity.activity.service.ActivityTask</property>
+	</obj-component>
+	<obj-component id="ShutdownService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.shutdown.request</property>
+		<property name="minThreads">1</property>
+		<property name="maxThreads">1</property>
+		<property name="allowedSkewMillis">300000</property>
+		<property name="task">esecurity.ccs.comp.shutdown.ShutdownTask</property>
+	</obj-component>
+	<obj-component id="UserSessionManager">
+		<class>esecurity.ccs.comp.auth.UserSessionManagerImpl</class>
+		<property name="expireTime">300000</property>
+		<property name="publisher">DispatchManager</property>
+	</obj-component>
+	<obj-component id="AuthenticationService">
+		<class>esecurity.ccs.comp.auth.AuthenticationService</class>
+		<property name="handler">esecurity.login.request</property>
+		<property name="maxThreads">100</property>
+		<!-- The property below is the timeout for Sentinel Control Center sessions.
+		-->
+		<property name="sessionExpireTime">300000</property>
+		<!-- The property below is the web session timeout.  It is used when creating the SAML
+				token, so the SAML token expires based upon this value.
+				When the web session times out, a dialog appears over whatever screen the user 
+				happened to be on, allowing them to relogin or to logout fully. If they relogin
+				sucessfully, they stay on the same page and can continue working. If they choose
+				to logout, it brings them to the main login page.
+		-->
+		<property name="tokenExpireTime">86400000</property>
+		<property name="userSessionManager">UserSessionManager</property>
+		<property name="userManagement">local</property> <!-- (local or remote) Users are managed locally in our DB -->
+		<property name="ticketExpireTime">300000</property>
+		<property name="failedAuthDelay">2000</property>
+		<!-- account lockout settings
+			"intruderDetectInterval" defines the time window within which successive failed authentication attempts
+			will cause a user account to be locked. Value is in milliseconds.
+
+			"intruderDetectMaxFailedAttempts" is the number of failed authentication attempts allowed within the
+			window specified by "intruderDetectInterval" before a user account is locked.
+
+			"intruderDetectLockPeriod" defines the length of time a user account remains locked after
+			successive failed authentication attempts. The value is in milliseconds. A value of 0 indicates
+			that locked accounts are not automatically re-enabled.
+
+			"intruderDetectAdminAutoLock" defines whether or not the built-in user account named "admin" is
+			subject to locking in response to failed authentication attempts.
+		-->
+		<property name="intruderDetectInterval">300000</property>
+		<property name="intruderDetectMaxFailedAttempts">5</property>
+		<property name="intruderDetectLockPeriod">900000</property>
+		<property name="intruderDetectAdminAutoLock">false</property>
+		<property name="task">esecurity.ccs.comp.auth.DBAuthenticationTask</property>
+	</obj-component>
+	<obj-component id="UserSessionLogoffService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.user.session.logoff.request</property>
+		<property name="maxThreads">100</property>
+		<property name="expireTime">300000</property>
+		<property name="userSessionManager">UserSessionManager</property>
+		<property name="task">esecurity.ccs.comp.auth.UserSessionLogoffTask</property>
+	</obj-component>
+	<obj-component id="UserSessionKillService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.user.session.kill.request</property>
+		<property name="maxThreads">100</property>
+		<property name="expireTime">300000</property>
+		<property name="userSessionManager">UserSessionManager</property>
+		<property name="task">esecurity.ccs.comp.auth.UserSessionKillTask</property>
+	</obj-component>
+	<obj-component id="UserSessionQueryService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.user.session.update.request</property>
+		<property name="maxThreads">100</property>
+		<property name="userSessionManager">UserSessionManager</property>
+		<property name="task">esecurity.ccs.comp.auth.UserSessionsQueryTask</property>
+	</obj-component>
+	<obj-component id="UserSessionKeepAliveService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.user.session.keepalive</property>
+		<property name="maxThreads">100</property>
+		<property name="expireTime">300000</property>
+		<property name="userSessionManager">UserSessionManager</property>
+		<property name="task">esecurity.ccs.comp.auth.UserSessionKeepAliveTask</property>
+	</obj-component> 
+	<obj-component id="MapService">
+		<class>esecurity.ccs.comp.mapengine.map.CMapServiceImpl</class>
+		<obj-component-ref>
+			<name>Publisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="ListUpdater">
+		<class>esecurity.ccs.comp.list.CListUpdater</class>
+		<obj-component-ref>
+			<name>Publisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="RemotableMapService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.remoterequest.map</property>
+		<property name="maxThreads">100</property>
+		<property name="task">esecurity.base.ccs.comp.GenericRemoteObjectTask</property>
+	</obj-component>
+	<obj-component id="RemoteObjectService">
+		<class>esecurity.base.ccs.comp.RemoteObjectService</class>
+		<property name="handler">esecurity.remoterequest</property>
+		<property name="maxThreads">100</property>
+		<property name="task">esecurity.base.ccs.comp.GenericRemoteObjectTask</property>
+	</obj-component>
+	<obj-component id="PluginRepositoryComponent">
+		<class>esecurity.ccs.comp.repository.PluginRepositoryComponent</class>
+		<property name="rootDirectory">${esecurity.data.home}/data/plugin_repository</property>
+	</obj-component>
+	<obj-component id="CorrelationManager">
+		<class>esecurity.ccs.comp.correlation.CorrelationManager</class>
+	</obj-component>
+	<obj-component id="HealthManagerComponent">
+		<class>esecurity.ccs.comp.generichealth.CHealthManager</class>
+		<property name="Reporter.Correlation">esecurity.ccs.comp.correlation.health.CorrelationHealthProviderFactory</property>
+		<property name="Reporter.EventSourceManagement">esecurity.ccs.comp.evtsrcmgt.health.ESMHealthProviderFactory</property>
+		<property name="Reporter.IntegratorManagement">esecurity.ccs.comp.integrator.health.IntegratorHealthProviderFactory</property>
+		<!-- Not currently used
+		<property name="updateInterval">300000</property>
+		<property name="interbatchDelay">1000</property>
+		-->
+	</obj-component>	
+
+
+	
+	<!-- Collector Manager -->
+		
+	<!-- Event Source Management Component -->
+	<obj-component id="EventSourceManagement">
+		<class>esecurity.ccs.comp.proxycollector.common.CEventSourceManager</class>
+		<property name="statusEnabled">true</property>
+		<property name="statusInterval">60</property>
+		<property name="minStatusInterval">5</property>
+		<property name="maxCollectorEnginesInCluster">10</property>
+		<!-- time in ms. 900000 = 15 min, 3000 = 3 sec
+		<property name="offsetSaveInterval">900000</property>
+		<property name="fileOffsetSaveInterval">3000</property>
+		-->
+		<!--
+		<property name="port">0</property>
+		<property name="ip"></property>
+		-->
+		<obj-component-ref>
+			<name>EventPublisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventRouter</name>
+			<ref-id>EventRouter</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="MemoryDumpHandler">
+		<class>esecurity.ccs.comp.logging.MemoryDumpHandler</class>
+		<property name="checkInterval">300000</property>
+	</obj-component>
+
+	<obj-component id="JasperReportingComponent">
+		<class>esecurity.ccs.comp.reporting.jasper.JasperReportingComponent</class>
+		<property name="reporting.reportResultsDisplayed">10</property>
+		<property name="reporting.virtualizer">JRSwapFileVirtualizer</property>
+		<property name="reporting.virtualizer.size">100</property>
+		<property name="reporting.csv.enable">false</property>
+		<property name="reporting.csv.email">false</property>
+		<property name="reporting.csv.outputdir"></property>
+		<property name="reporting.xml.enable">false</property>
+		<property name="reporting.xml.email">false</property>
+		<property name="reporting.xml.outputdir"></property>        
+		<property name="reporting.pdf.outputdir"></property>
+		<!--
+		Specifies whether or not it is ok to run reports in standalone processes.
+		-->
+		<property name="reporting.process.oktorunstandalone">true</property>
+
+		<!--
+		When running a report in a standalone process, what should the "nice" value
+		of that process be? Maximum value of 19 is the lowest priority. Set to 0
+		to have priority the same as the Sentinel process.
+		-->
+		<property name="reporting.process.priority">19</property>
+		
+	</obj-component>
+	<obj-component id="DiskSpaceMonitor">
+		<class>esecurity.ccs.comp.diskmonitor.DiskSpaceMonitor</class>
+		<property name="diskSpaceCheckInterval">60000</property>
+		<property name="diskSpaceStatsStoreInterval">3600000</property>
+	</obj-component>
+	<obj-component id="DiskStatisticsCache">
+		<class>esecurity.ccs.comp.diskstatistics.DiskStatisticsCache</class>
+		<property name="emaSmoothingFactor">0.2</property>
+		<property name="onlineDiskStatsCheckInterval">120000</property> <!-- 2 minutes-->
+		<property name="onlineTaskTimeoutPeriod">90000</property> <!-- 1.5 minutes-->
+		<property name="networkDiskStatsCheckInterval">1800000</property> <!-- 30 minutes-->
+		<property name="networkTaskTimeoutPeriod">1200000</property> <!-- 20 minutes-->
+	</obj-component>
+	<obj-component id="ArchiveConfigurer">
+		<class>esecurity.ccs.comp.archive.ArchiveConfigurer</class>
+		<property name="archiveCheckInterval">300000</property>
+	</obj-component>
+	
+	<!-- Workflow -->
+	<obj-component id="TriggerService">
+		<class>esecurity.base.ccs.comp.GenericService</class>
+		<property name="handler">esecurity.workflow.triggerchannel</property>
+		<property name="maxThreads">100</property>
+		<property name="task">com.esecurity.workflow.server.TriggerTask</property>
+	</obj-component>
+	<obj-component id="DeadlineEvaluation">
+		<class>com.esecurity.workflow.server.DeadlineEvaluationComponent</class>
+		<property name="interval.seconds">30</property>
+	</obj-component>
+
+
+	<!-- Correlation Engine -->
+	<obj-component id="CorrelationEngine">
+		<class>esecurity.ccs.comp.correlation.CorrelationComp</class>
+		<obj-component-ref>
+			<name>EventPublisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventProducer</name>
+			<ref-id>EventStoreService</ref-id>
+		</obj-component-ref>
+		<property name="inputBufferManagementPolicy">Drop</property>
+		<property name="inputBufferMaximumMemorySize.bytes">${CORRELATION_INPUT_BUFFER_MAX_MEMORY_SIZE}</property>
+		<property name="minimumAverageEventSize.bytes">4000</property>
+		<property name="correlateLocalCorrelationEvents">false</property>
+		<property name="correlateRemoteCorrelationEvents">true</property>
+		<property name="memory.policy.classname">esecurity.ccs.correlation.impl.tpm.DisableRulePolicy</property>
+		<property name="memory.normal.check.interval.seconds">10</property>
+		<property name="memory.warning.check.interval.seconds">5</property>
+		<property name="memory.severe.check.interval.seconds">2</property>
+		<property name="memory.severe.trend.multiplier">1</property>
+		<property name="memory.warning.threshold.percent">81</property>
+		<property name="memory.severe.threshold.percent">91</property>
+		<property name="maxCorrelationEventUpdates">100</property>
+		<property name="ruletest.cache.size">20</property>
+		<property name="ruletest.max.running">1</property>
+		<property name="ruletest.max.fire.count">20</property>
+		<property name="ruletest.max.events">100000</property>
+		<property name="ruletest.event.search.batch.size">1000</property>
+	</obj-component>
+
+	<!-- Trending and baselining runtime -->
+<!--
+	<obj-component id="BaseliningRuntime">
+		<class>com.novell.sentinel.analytics.events.runtime.EventTimeseriesRuntimeComponent</class>
+	</obj-component>
+-->
+	<!-- Active Views -->
+	<obj-component id="RtEventSummaryService">
+		<class>esecurity.ccs.comp.rtevent.summary.SummaryServiceImpl</class>
+		<property name="sendTimeDelay">30</property>
+		<property name="historyBucketCount">2880</property>
+		<property name="activeViewTimeout">3600</property>    	
+		<property name="permanentActiveViewTimeout">345600</property>
+		<property name="statsReportInterval">43200</property>
+		<property name="summaryStatsReportInterval">900</property>
+		<property name="maxEventsPerInterval">750</property>
+		<property name="activeBucketCount">10</property>
+		<property name="maxActiveViews">100</property>
+		<obj-component-ref>
+			<name>Publisher</name>
+			<ref-id>DispatchManager</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventProducer</name>
+			<ref-id>EventStoreService</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>ThreadPool</name>
+			<ref-id>RtEventSummaryThreadPool</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>TimerService</name>
+			<ref-id>RtTimerService</ref-id>
+		</obj-component-ref>
+	</obj-component>
+
+	<obj-component id="DeviceManager" >
+		<class>esecurity.ccs.comp.device.DeviceManager</class>
+		<!-- GroupRecalcSchedule is a cron expression.  This one says run the job every day at 12:15 am -->
+		<property name="GroupRecalcSchedule">0 15 0 * * ?</property>
+		<!-- WaitAfterLastNotify is the number of seconds to wait after being notified that a device or device group
+			  changed before we will recalculate group membership for the device or device group -->
+		<property name="WaitAfterLastNotify">60</property>
+		<!-- SleepBetweenChecks is the number of seconds to sleep between checking to see if we need to recalculate
+			  group membership for devices or device groups. -->
+		<property name="SleepBetweenChecks">30</property>
+		<!-- HBMaxDelay is the minimum number of seconds that must elapse since an agent's last heartbeat before the
+			  agent is considered to be "offline". -->
+		<property name="HBMaxDelay">600</property>
+	</obj-component>
+
+    <obj-component id="ConfigureOSP">
+        <class>esecurity.ccs.comp.osp.OSPConfigComponent</class>
+    </obj-component>
+
+	<obj-component id="WebComponentRegistry">
+		<class>esecurity.ccs.comp.webapp.WebComponentRegistryComponent</class>
+	</obj-component>
+
+	<obj-component id="WebappServer">
+		<class>esecurity.ccs.comp.webapp.WebappServerComponent</class>
+		<property name="jetty.home">${esecurity.config.home}/3rdparty/jetty</property>
+		<property name="jetty.base">${esecurity.config.home}/3rdparty/jetty</property>
+		<property name="jetty.config.files">${esecurity.config.home}/3rdparty/jetty/jetty-jmx.xml,${esecurity.config.home}/3rdparty/jetty/jetty-jmx-remote.xml,${esecurity.config.home}/3rdparty/jetty/jetty.xml,${esecurity.config.home}/3rdparty/jetty/jetty-deploy.xml,${esecurity.config.home}/3rdparty/jetty/jetty-ssl.xml,${esecurity.config.home}/3rdparty/jetty/jetty-ssl-context.xml,${esecurity.config.home}/3rdparty/jetty/jetty-https.xml</property>
+		<property name="jetty.restart.trigger.file">${esecurity.data.home}/data/jetty.restart.trigger</property>
+	</obj-component>
+
+	<obj-component id="EventJanitorService">
+		<class>esecurity.ccs.comp.event.EventJanitorService</class>
+		<property name="processingInterval">3600000</property> <!-- 3600000 1 hour -->
+		<property name="janitorInterval">-1</property>	       <!-- -1 turned off -->
+		<property name="analyzeKeepAliveInterval">3600000</property>
+		<property name="analyzeMaxAllowedReports">100</property>
+		<property name="actionKeepAliveInterval">86400000</property> <!-- 3600000 (1 hour) * 24 hours -->
+		<property name="actionExecutorRetentionPeriod">600000</property> <!-- 10 minutes -->
+		<property name="actionExecutorMaxLife">7200000</property> <!-- 2 hours -->
+	</obj-component>
+	<obj-component id="AdvisorService">
+		<class>esecurity.ccs.comp.advisor.feed.Advisor</class>
+		<property name="advisor.feed.prefix">advnxsfeed</property>
+	</obj-component>
+
+	<!-- The scheduler needs to appear after the Sentinel component (because it needs the Comm Server) -->
+	<obj-component id="Scheduler">
+		<class>esecurity.ccs.comp.scheduler.CSchedulerService</class>
+		<property name="partitionJobRefreshInterval">5</property>
+		<property name="partitionJobsEnabled">false</property>
+	</obj-component>
+	<obj-component id="DownloadUtil">
+		<class>esecurity.ccs.comp.downloadfeed.DownloadUtil</class>
+	</obj-component>
+	<obj-component id="VariableService">
+		<class>esecurity.ccs.comp.variables.EVariableService</class>
+	</obj-component>
+	<obj-component id="SMBridge">
+		<class>com.netiq.sentinel.smbridge.AgentSync</class>
+	</obj-component>
+	<obj-component id="UserCleanup">
+		<class>esecurity.ccs.comp.user.UserCleanupService</class>
+		<property name="delete.shared.filters">false</property>
+	</obj-component>
+<!--
+	<obj-component id="AlertGrooming">
+	        <class>esecurity.ccs.comp.alert.grooming.AlertGroomingService</class>
+	        <property name="grooming.batchsize">20000</property>
+    </obj-component>
+-->	<!-- ElasticSearchSecurityPluginWhiteListCreator must be located after ScalableStorageContextComponent and EventSourceManagement because it is dependent 
+		 on these two components -->
+	<obj-component id="ElasticSearchSecurityPluginWhiteListCreator">
+		<class>esecurity.ccs.comp.scalablestorage.ElasticSearchSecurityPluginWhiteListCreator</class>
+		<obj-component-ref>
+			<name>ScalableStorageContextComponent</name>
+			<ref-id>ScalableStorageContextComponent</ref-id>
+		</obj-component-ref>
+		<obj-component-ref>
+			<name>EventSourceManagement</name>
+			<ref-id>EventSourceManagement</ref-id>
+		</obj-component-ref>
+	</obj-component>
+	<obj-component id="Feeds">
+	        <class>esecurity.ccs.comp.feed.ThreatFeedComponent</class>
+    </obj-component>
+	<obj-component id="RealtimeEventViewDataSyncMonitor">
+		<class>esecurity.ccs.comp.event.RealTimeEventViewsDataSyncMonitor</class>
+		<property name="realtimeViewDataSyncCheckInterval">3600000</property>
+	</obj-component>	
+</obj-container>
+

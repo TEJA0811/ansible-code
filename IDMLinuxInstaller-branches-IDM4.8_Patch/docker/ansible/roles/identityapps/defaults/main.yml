@@ -1,0 +1,4 @@
+---
+# defaults file for osp
+
+silent_prop_apps: templates/silent_ansible_apps.properties

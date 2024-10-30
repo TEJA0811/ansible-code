@@ -1,0 +1,3 @@
+---
+# defaults file for idmengine_patch
+silent_prop_patch: files/silent_ansible_patch_engine.properties

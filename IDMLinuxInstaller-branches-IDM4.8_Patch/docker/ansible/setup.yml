@@ -1,0 +1,91 @@
+---
+
+
+- 
+  hosts : localhost
+  
+  tasks :
+    
+    - name: Read setup information from CSV file and return a dictionary
+      read_csv:
+        path: "{{ playbook_dir }}/input/setup.csv"
+        delimiter : ','
+      register: servers_csv
+      delegate_to: localhost
+    
+    - name : set the file ready to write
+      shell : |
+        rm -f "roles/variables/defaults/main.yml" &> /dev/null
+        touch "roles/variables/defaults/main.yml"
+        echo "---" > "roles/variables/defaults/main.yml"
+        echo "# Vars file for pre_install_role" >> "roles/variables/defaults/main.yml"
+        echo ""
+  
+    - name : clear idminventory.ini file
+      shell : |
+        rm "idminventory.ini" &> /dev/null
+        touch "idminventory.ini"
+
+    - name : Generate of write it to a file
+      shell : |
+        if [ {{ user.Deploy }} == "yes" ]
+        then
+            echo "[{{ user.Component }}]" >> "idminventory.ini"
+            echo -e "{{ user.DockerHost }} \n" >> "idminventory.ini"
+        fi
+        echo -e " \n" >> "roles/variables/defaults/main.yml"
+        echo "{{ user.Component }}_deploy : \"{{ user.Deploy }}\"" >> "roles/variables/defaults/main.yml"
+        if [ {{ user.Component }} == "dns" ]
+        then 
+            var=$(echo {{ user.ContainerHostname }} | cut -d'.' -f2-);echo "{{ user.Component }}_domain_name : \"$var\"" >> "roles/variables/defaults/main.yml";
+            
+            echo "dns_list:" >> "roles/variables/defaults/main.yml"
+            echo " - \"{{ user.IPAddress }}\"" >> "roles/variables/defaults/main.yml"
+        fi
+        echo "{{ user.Component }}_container_ipaddress : \"{{ user.IPAddress }}\"" >> "roles/variables/defaults/main.yml"
+        echo "{{ user.Component }}_container_hostname : \"{{ user.ContainerHostname }}\"" >> "roles/variables/defaults/main.yml"
+        echo "{{ user.Component }}_container_name : \"{{  user.ContainerName }}\"" >> "roles/variables/defaults/main.yml"
+        echo "{{ user.Component }}_shared_volume : \"{{ user.SharedVolume }}\"" >> "roles/variables/defaults/main.yml"
+        
+        if [ {{ user.Component }} != "dns" ]
+        then
+            echo "{{ user.Component }}_volumes :"  >> "roles/variables/defaults/main.yml"
+            if [ {{ user.Component }} == "sspr" ]
+            then
+                echo "  - \"{{ user.SharedVolume }}/sspr:/config\"" >> "roles/variables/defaults/main.yml"
+            else
+                echo "  - \"{{ user.SharedVolume }}:/config\"" >> "roles/variables/defaults/main.yml"
+            fi
+            export volume_list=$(echo {{ user.FileMounting }})
+            if [[ ! -z "$volume_list" ]]
+            then 
+               list=$volume_list BIFS=$IFS;IFS=" ";for a in $list;do file=$(basename $a);filelist+=$(echo $file\ );echo "  - \"{{ user.SharedVolume }}/$file:$a\"" >> "roles/variables/defaults/main.yml";done;IFS=$BIFS
+               
+            fi
+            if [[ ! -z $filelist ]]
+            then 
+               echo "{{ user.Component }}_files :" >> "roles/variables/defaults/main.yml"
+               list=$filelist BIFS=$IFS;IFS=" ";for a in $list;do echo "  - \"$a\"" >> "roles/variables/defaults/main.yml";done;IFS=$BIFS
+            fi
+        fi
+        
+        export port_mapping_list=$(echo {{ user.ExposedPorts }})
+        if [[ ! -z "$port_mapping_list" ]]
+        then 
+           echo "{{ user.Component }}_port_mapping :"  >> "roles/variables/defaults/main.yml"
+           list=$port_mapping_list BIFS=$IFS;IFS=" ";for a in $list;do echo "  - \"$a:$a\"" >> "roles/variables/defaults/main.yml";done;IFS=$BIFS
+        fi
+        
+        echo "\n\n"
+        
+      loop: "{{ servers_csv.list }}"
+      loop_control:
+        loop_var: user
+        
+    - name: "Convert Silent Property file to Yaml file"
+      shell: |
+        sh -x "{{ playbook_dir }}/common/scripts/convertsilentprop2yaml.sh" "{{ playbook_dir }}" "{{ playbook_dir }}/input/silent.properties"
+      #notify: handler_for_message - convert_property2yaml
+      delegate_to: localhost
+        
+...

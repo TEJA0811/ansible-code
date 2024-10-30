@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-fanout-agent-activemq
+  annotations:
+    {{- toYaml .Values.service.annotations | nindent 4 }}
+  labels:
+    {{- include "activemq.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.tcpPort }}
+      targetPort: tcp-port
+      protocol: TCP
+      name: tcp
+    - port: {{ .Values.service.ports.webConsolePort }}
+      targetPort: webconsole-port
+      protocol: TCP
+      name: webconsole
+  selector:
+    {{- include "activemq.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~Copyright (c) 2010-2014 Unpublished Work of NetIQ Corporation. All Rights Reserved.
+  ~
+  ~  THIS WORK IS SUBJECT TO U.S. AND INTERNATIONAL COPYRIGHT LAWS AND TREATIES
+  ~  NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED COPIED, DISTRIBUTED,
+  ~  REVISED, MODIFIED, TRANSLATED, ABRIDGED, CONDENSED, EXPANDED, COLLECTED,
+  ~  COMPILED, LINKED, RECAST, TRANSFORMED OR ADAPTED WITHOUT THE PRIOR WRITTEN
+  ~  CONSENT OF NETIQ. ANY USE OR EXPLOITATION OF THIS WORK WITHOUT
+  ~  AUTHORIZATION COULD SUBJECT THE PERPETRATOR TO CRIMINAL AND CIVIL
+  ~  LIABILITY.
+  -->
+<logging>
+  <!-- Prefix for logging messages from this logger configuration -->
+  <prefix>[DCS-CORE]</prefix>
+  <loggers>
+    <logger additivity="true" name="com.novell" level="INFO">
+    </logger>
+    <logger additivity="true" name="com.netiq" level="INFO">
+    </logger>
+  </loggers>
+  <audit>
+    <!--Defines location of Syslog server.-->
+    
+    <SyslogHost>{{ groups['slm_iga'][0] }}</SyslogHost>
+    <SyslogPort>1468</SyslogPort>
+    
+    <!--Specify protocol to be used (UDP/TCP/SSL)-->
+    
+    <SyslogProtocol>TCP</SyslogProtocol>
+    
+
+    <!--Specify SSL keystore file for SSL connection.
+      ~  File path should be given with double backslash.
+    -->
+    <!--For Linux-->
+    <!--
+    <SyslogSSLKeystoreFile>/etc/opt/novell/mycert.pem</SyslogSSLKeystoreFile>
+    -->
+    <!--For Windows, file path should be given with double backslash.-->
+    <!--
+    <SyslogSSLKeystoreFile>C:\\Novell\\mycert.pem</SyslogSSLKeystoreFile>
+    -->
+
+    <!--Specify SSL keystore password for SSL connection. -->
+    <!--
+    <SyslogSSLKeystorePassword>password</SyslogSSLKeystorePassword>
+    -->
+
+    <!--Specify whether to append the component name before the event message
+      ~ Inputs should be yes/no
+      ~ If NetIQ Sentinel is the event listener, this option should be set to 'yes'
+    -->
+    
+    <AppendComponentName>yes</AppendComponentName>
+   
+
+    <!--Defines caching for SyslogAppender.
+      ~ Inputs should be yes/no
+    -->
+   
+    <CacheEnabled>yes</CacheEnabled>
+   
+
+    <!--Cache location Directory
+      ~ Directory should be available for creating cache files
+      ~ Directory should have 'novlua' permission for caching to work correctly
+    -->
+    <!--For Linux-->
+    
+    <CacheDir>/opt/netiq/idm/apps/tomcat</CacheDir>
+   
+    <!--For Windows, file path should be given with double backslash.-->
+    <!--
+    <CacheDir>C:\\NetIQ\\idm\\IDMcache</CacheDir>
+    -->
+
+    <!--Cache File Size
+      ~ Cache File size should be in the range of 50MB to 4000MB
+    -->
+    
+    <CacheRolloverSize>50</CacheRolloverSize>
+    
+
+    <!--Log file for appender 
+      ~ The directory containing the file specified should have 'novlua' permission to work correctly.
+    -->
+    <!--For Linux-->
+    
+    <FileAppenderFileName>/opt/netiq/idm/apps/tomcat/cef-events.log</FileAppenderFileName>
+    
+    <!--For Windows, file path should be given with double backslash.-->
+    <!--
+    <FileAppenderFileName>C:\\cef-events.log</FileAppenderFileName>
+    -->
+
+    <!--Max size of log file for file appender -->
+    
+    <FileMaxRolloverSize>50</FileMaxRolloverSize>
+    
+  </audit>
+</logging>
+

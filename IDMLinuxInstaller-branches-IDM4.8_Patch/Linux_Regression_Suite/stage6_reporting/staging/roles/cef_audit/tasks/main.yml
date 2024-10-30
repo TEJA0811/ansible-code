@@ -1,0 +1,67 @@
+---
+# tasks file for cef_audit
+
+- name: "Copy idmrptcore_logging.xml file to RPT server"
+  template:
+        src: "idmrptcore_logging.xml"
+        dest: "{{ tomcat_conf }}"
+        owner: novlua
+        group: novlua
+        mode: '755'
+
+- name: "Copy idmrptdcs_logging.xml file to RPT server"
+  template:
+        src: "idmrptdcs_logging.xml"
+        dest: "{{ tomcat_conf }}"
+        owner: novlua
+        group: novlua
+        mode: '755'
+
+- name: "Copy idmuserapp_logging.xml file to RPT server"
+  template:
+        src: "idmuserapp_logging.xml"
+        dest: "{{ tomcat_conf }}"
+        owner: novlua
+        group: novlua
+        mode: '755'
+
+- name: "Copy workflow_logging.xml file to RPT server"
+  template:
+        src: "workflow_logging.xml"
+        dest: "{{ tomcat_conf }}"
+        owner: novlua
+        group: novlua
+        mode: '755'
+
+- name: Enable CEF auditing for Rpt and ID APPS
+  shell: |
+    sed -i -e '/com\.netiq\.ism\.audit\.cef\.enabled =/ s/= .*/= true/'  -e '/com\.netiq\.ism\.audit\.cef\.host =/ s/= .*/= {{ groups['slm_iga'][0] }}/' -e '/com\.netiq\.ism\.audit\.cef\.port =/ s/= .*/= 1468/'   '{{ tomcat_conf }}/ism-configuration.properties'
+    sed -i -e '/ig.audit.rpt.syslog.enabled =/ s/= .*/= true/' -e '/ig.audit.rpt.syslog.host =/ s/= .*/= {{ groups['slm_iga'][0] }}/' -e '/ig.audit.rpt.syslog.port =/ s/= .*/= 1468/'  -e '/ig.audit.rpt.syslog.cache-dir =/ s/= .*/= \/opt\/netiq\/idm\/apps\/tomcat\//'  '{{ tomcat_conf }}/ism-configuration.properties'
+    systemctl restart netiq-tomcat.service
+
+# - name: Install package psycopg2 to enable Views addition
+#   shell: |
+#     pip install --upgrade pip
+#     pip install psycopg2-binary
+#   delegate_to: localhost
+
+- name: "Pause for 3 mins until Tomcat restarts"
+  pause:
+    minutes: 5
+
+# Requires python package psycopg2-binary in RPT machine
+- name: Add Views for running reports
+  postgresql_query:
+    login_host: "{{ groups['idmengine'][0] }}"
+    db: idmrptdb
+    login_user: postgres
+    login_password: novell
+    path_to_script: "{{ role_path }}/files/Views_pg.sql"
+  delegate_to: localhost
+
+# Alternative
+# ln -s /usr/lib64/libssl.so.1.1 /usr/lib64/libssl.so.1.0.0
+# ln -s /usr/lib64/libcrypto.so.1.1 /usr/lib64/libcrypto.so.1.0.0
+
+# export PGPASSWORD='novell'
+# /opt/netiq/idm/postgres/bin/psql -U postgres -d idmrptdb -a -f /root/tmp/views_postgres_483.sql

@@ -1,0 +1,105 @@
+---
+# tasks file for engine
+
+- name : Get IDM engine image file stats
+  local_action: stat path="{{ images_dir }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityengine.tar.gz"
+  register: enginefile
+
+- name : Check for image existence in Docker host
+  shell : docker images | grep identityengine | grep {{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+  register : imagealreadyloaded
+  ignore_errors : yes
+
+- name : Print shared volume location
+  debug :
+    msg : "{{ engine_shared_volume }}"
+    
+- name: Create "{{ engine_shared_volume }}" if it does not exist
+  file:
+    path: "{{ engine_shared_volume }}"
+    state: directory
+    mode: 0775
+    
+- name : Copy the IDM engine image to Docker host
+  copy :
+          src : "{{ images_dir }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityengine.tar.gz"
+          dest : "{{ engine_shared_volume }}"
+  when : 
+        - enginefile.stat.exists
+        - imagealreadyloaded.rc == 1
+        
+- name : Load the IDM image
+  docker_image:
+    state : present
+    name: identityengine:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+    load_path: "{{ engine_shared_volume }}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityengine.tar.gz"
+    timeout: 3000
+    source: load
+  when : imagealreadyloaded.rc == 1
+
+- name: "Add nds user to Remote VM"
+  shell: |
+    useradd -p $(openssl passwd -crypt 'novell') -u 35753 -m nds
+  ignore_errors: yes
+    
+- name: Create "{{ engine_shared_volume }}/idm/mountfiles" if it does not exist
+  file:
+    path: "{{ engine_shared_volume }}/idm/mountfiles"
+    state: directory
+    mode: 0775
+    
+- name : Copy silent.properties file to target server
+  template :
+    src : "silent.properties"
+    dest : "{{ engine_shared_volume }}"
+    
+- name : Copy IDM Engine files to shared volume
+  copy :
+    src : "{{ role_path }}/files/{{ item }}"
+    dest : "{{ engine_shared_volume }}/idm/mountfiles"
+  loop: "{{ engine_files }}"
+  when: engine_files is defined
+  
+- name: "Assign permissions to idm Directory"
+  shell: chown -R 35753:root "{{ engine_shared_volume }}/idm"
+
+- name : Deploy IDM Engine container
+  docker_container :
+    name : "{{ engine_container_name }}"
+    image : "identityengine:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}"
+    state: started
+    stop_timeout: 300
+    hostname : "{{ engine_container_hostname }}"
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+#        ipv4_address : "{{ engine_container_ipaddress }}"
+    volumes : "{{ engine_volumes | default([]) }}"
+    ports : "{{ engine_port_mapping | default([]) }}"
+#    dns_servers : "{{ dns_list | default([]) }}"     
+    env:
+      SILENT_INSTALL_FILE : /config/silent.properties
+    tty: true
+    detach: true
+
+- name: Wait until IDM Engine is configured
+  shell: cat "{{ engine_shared_volume }}/idm/log/idmconfigure.log"
+  register: data
+  until : "'Completed configuration of : Identity Manager Engine' in data.stdout"
+  delay : 15
+  retries : 60
+  
+- name: "Pause for 3 mins until IDM is stable"
+  pause:
+    minutes: 3
+
+- name : Delete the IDM engine tarball
+  file :
+          path : "{{ engine_shared_volume }}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityengine.tar.gz"
+          state : absent
+
+# - name: Delete silent.properties file
+#   file:
+#     path: "{{ engine_shared_volume }}/silent.properties"
+#     state: absent
+    

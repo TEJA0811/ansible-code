@@ -1,0 +1,67 @@
+#logoProduct, #logoProduct span.empty {
+background: url("images/logoProduct.png") no-repeat;
+height: 28px;
+width: 230px;
+}
+.login .logo {
+width: 230px;
+height: 117px;
+overflow: hidden;
+display: block;
+text-indent: -1000em;
+background: url("images/background.gif") no-repeat;
+position: relative;
+left: -5px;
+}
+.login .version {
+display: none;
+}
+#loginPanel .headertitle {
+left: 10px;
+top: 10px;
+background: url("images/login_logo.png") no-repeat scroll center center transparent;
+width: 230px;
+height: 115px;
+}
+.browserSupportMessage {
+display: none;
+}
+#navSecondary li.plugins-action {
+display: none;
+}
+#navSecondary li.myapplink-action {
+display: none;
+}
+/*#navSecondary li.users-action {
+display: none;
+}
+*/
+#navSecondary li.download-action {
+display: none;
+}
+#navSecondary li.collection-action {
+display: none;
+}
+
+.main-login {
+ min-height:269px;
+ margin-top:-174px;
+ background:url("images/bg-login-panel.png") no-repeat left top;
+}
+
+.main-login .form .version-number {
+  color: #fff;
+  font-size: 1.1em;
+}
+
+.main-login .form .version-number:before {
+  content: "Version 4.8.8";
+  position: absolute;
+  visibility: visible;
+}
+
+.loginRepeat .main-login .login_content #loginmessage{margin-top:25px;margin-bottom:4px;color:#fff;font-size:11px}
+
+#version-number {
+	display: none;'
+}

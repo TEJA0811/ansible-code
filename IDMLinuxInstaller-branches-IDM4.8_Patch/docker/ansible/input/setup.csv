@@ -1,0 +1,12 @@
+Component,Deploy,DockerHost,IPAddress,ContainerName,ContainerHostname,ExposedPorts,FileMounting,SharedVolume
+dns,yes,dockerhost1,192.168.0.22,dns-container,idmdns.example.com,,,/data
+engine,yes,dockerhost1,192.168.0.2,engine-container,identityengine.example.com,636  389,,/data
+remoteloader,yes,dockerhost1,192.168.0.3,remoteloader-container,remoteloader.example.com,8090,,/data
+fanoutagent,yes,dockerhost1,192.168.0.4,fanoutagent-container,fanoutagent.example.com,"       ",,/data
+osp,yes,dockerhost1,192.168.0.6,osp-container,osp.example.com,8543,,/data
+postgres,yes,dockerhost1,192.168.0.7,postgresql-container,postgresql.example.com,5432,,/data
+identityapps,yes,dockerhost1,192.168.0.8,idapps-container,identityapps.example.com,18543,,/data
+formrenderer,yes,dockerhost1,192.168.0.9,fr-container,formrenderer.example.com,8600,,/data
+activemq,yes,dockerhost1,192.168.0.10,amq-container,activemq.example.com,8161  61616,,/data
+rpt,yes,dockerhost1,192.168.0.11,rpt-container,identityreporting.example.com,28543,,/data
+sspr,yes,dockerhost1,192.168.0.12,sspr-container,sspr.example.com,8443,,/data

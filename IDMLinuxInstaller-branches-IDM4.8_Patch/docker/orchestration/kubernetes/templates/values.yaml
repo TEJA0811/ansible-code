@@ -1,0 +1,501 @@
+#==========================================================================
+# Configuration template for Identity Manager Deployment on Cloud.         
+#                                                                          
+# This is a YAML-formatted file which uses 2 spaces for indentation.
+#
+# Ref: https://yaml.org/spec/1.2.2/                                                                              
+#==========================================================================
+
+
+#----------------------------------------------------------------------------------------
+# If you want to deploy Advanced Edition of Identity Manager, enter "true". 
+# For Standard Edition, enter "false"
+#----------------------------------------------------------------------------------------
+IS_ADVANCED_EDITION: __IS_ADVANCED_EDITION__
+
+
+#------------------------------------------------------------------------------------------------------------------
+# Are you using Azure PostgreSQL Server instance as a Database Server for Identity Applications and Reporting (y/n)
+#------------------------------------------------------------------------------------------------------------------
+AZURE_POSTGRESQL_REQUIRED: "__AZURE_POSTGRESQL_REQUIRED__"
+
+ 
+#################################################################################
+#            Registry credentials for Identity Manager docker images            #
+################################################################################# 
+images:
+  
+  # Registry Server, example: exampleregistry.azurecr.io
+  registry: __CONTAINER_REGISTRY_SERVER__ 
+    
+  # Kubernetes secrets required for pulling the docker images
+  imagePullSecrets:
+    # Name of the Kubernetes secret containing the login credentials of the registry 
+    - name: regcred
+
+
+#################################################################################
+#                               Data Persistence                                #
+#################################################################################
+persistence:
+
+  # Persistent Storage for Identity Engine
+  identityengine:
+    # Specify the storage class name and the storage size for the Volume Claim Template
+    # Supported storage classes: 
+    #      managed-premium  => For deployment on Azure Kubernetes Service
+    volumeClaimTemplate:
+
+      storageClassName: "__KUBE_PERSISTENCE_ID_VAULT_STORAGE_CLASS__"
+
+      storageSize: "__KUBE_PERSISTENCE_ID_VAULT_STORAGE_SIZE__" 
+
+  # Shared Persistent Storage for the Identity Manager Components
+  shared:
+    # If you want to use an existing Persistent Volume Claim(PVC), enter the name of the existing claim
+    existingClaim:
+    
+    # Else, for dynamic provisioning of PVC, specify the storage class name and the storage size
+    # Supported storage classes:
+    #      azurefile  => For deployment on Azure Kubernetes Service
+    dynamicClaim:
+
+      storageClassName: "__KUBE_PERSISTENCE_STORAGE_CLASS__"
+
+      storageSize: "__KUBE_PERSISTENCE_STORAGE_SIZE__"
+    
+
+    
+
+#################################################################################
+#   Secret Manager for sensitive data such as passwords, keys and certficates   #
+#################################################################################
+secret_manager:
+  
+  # Azure Key Vault as Secret Manager
+  azureKeyVault:
+  
+    # Name of the Azure Key Vault
+    azureKeyVaultName: __AZURE_KEY_VAULT_NAME__
+
+    # Tenant ID of the Azure Key Vault
+    azureKeyVaultTenantId:
+
+    # +---------------------------------------------------------------------------------------------------------------------------------------+
+    # | Azure Kubernetes Service (AKS) cluster requires an identity to access Azure Key Vault.                                                |
+    # | Specify the Client ID of the user-defined Managed Identity used by the Azure Key Vault Secret Provider. You can run the following     |
+    # | az cli command to retrieve the Client ID of the identity:                                                                             |
+    # |     az aks show -g <Resource Group> -n <AKS Cluster Name> --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv |
+    # +---------------------------------------------------------------------------------------------------------------------------------------+
+    azureUserAssignedIdentityID:
+
+
+#################################################################################
+#                          Ingress Configuration                                #
+#################################################################################  
+ingress:
+  
+  #------------------------------------------------------------------
+  # Kubernetes annotations to customize the ingress behaviour
+  # NOTE: The following annotations are for nginx-ingress controller
+  #------------------------------------------------------------------
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/upstream-vhost: $host
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: https
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-path: "/"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "86400"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+      
+  #--------------------------------------------------------------------------------------------------------------------
+  # Domain name for accessing the Identity Manager web applications (includes Identity Applications, Identity Reporting 
+  # and Identity Console) via Ingress 
+  # Example: identitymanager.example.com
+  #-------------------------------------------------------------------------------------------------------------------- 
+  host: __KUBE_INGRESS_HOST_NAME__
+  
+  #---------------------------------------------------------------------------------------------------- -----
+  # TLS configuration for the Identity Manager web applications to be able to serve HTTPS traffic via Ingress 
+  #---------------------------------------------------------------------------------------------------- -----
+  tls:
+    
+    # Name of the Azure Key Vault Certificate containing the TLS certificate and the private key
+    # NOTE: The certificate should include the Subject Alternative Name(SAN) and the Common Name(CN) for the domain specified above
+    azureKeyVaultCertificateName: __AZURE_KEY_VAULT_TLS_CERT_NAME__
+
+    
+
+  
+#################################################################################
+#                         Identity Engine Configuration                          #
+################################################################################# 
+identityengine:
+
+  # Do you want to deploy Identity Engine (true/false)
+  deploy: __INSTALL_ENGINE__
+
+  # Number of Identity Engine replica pods
+  replicaCount: __ENGINE_REPLICA_COUNT__
+
+  configuration:
+  
+    # Identity Vault tree name
+    ID_VAULT_TREENAME: "__ID_VAULT_TREENAME__"
+    
+    # Identity Vault Server Context
+    ID_VAULT_SERVER_CONTEXT: "__ID_VAULT_SERVER_CONTEXT__"
+    
+    # Identity Vault Default Driver Set Name
+    ID_VAULT_DRIVER_SET: "__ID_VAULT_DRIVER_SET__"
+    
+    # Identity Vault Default Driver Set Deploy Context
+    ID_VAULT_DEPLOY_CTX: "__ID_VAULT_DEPLOY_CTX__"
+
+    #-------------------------------------------------------------------------   
+    # Identity Vault Administrator
+    #-------------------------------------------------------------------------
+    
+    # Identity Vault Admin DN
+    ID_VAULT_ADMIN_LDAP: "__ID_VAULT_ADMIN_LDAP__"
+
+    # Identity Vault Admin Password
+    ID_VAULT_PASSWORD:
+      secret: __SECRET_ID_VAULT_PASSWORD__
+            
+    #--------------------------------------------------------------------------   
+    # Identity Vault Certificates
+    #-------------------------------------------------------------------------- 
+    
+    # Key size for creation of RSA certificate authority keys and server keys   
+    ID_VAULT_RSA_KEYSIZE: "__ID_VAULT_RSA_KEYSIZE__"
+    
+    # Curve for the creation of EC certificate authority keys and server keys
+    ID_VAULT_EC_CURVE: "__ID_VAULT_EC_CURVE__"
+    
+    # Certificate life for the creation of default server certificates
+    ID_VAULT_CA_LIFE: "__ID_VAULT_CA_LIFE__"
+
+
+  #--------------------------------------------------------------------------------------
+  # Resource requests and limits for Identity Engine
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 2500m
+      memory: 4Gi
+    
+  
+            
+      
+#################################################################################
+#                     One SSO Provider(OSP) Configuration                       #
+#################################################################################
+osp:
+
+  # Do you want to deploy OSP (true/false)
+  deploy: __INSTALL_OSP__
+
+  # Number of OSP replica pods
+  replicaCount: __OSP_REPLICA_COUNT__
+
+  configuration:
+      
+    # OSP custom login screen name
+    OSP_CUSTOM_NAME: "__OSP_CUSTOM_NAME__"
+    
+    # OSP Client Passsword
+    SSO_SERVICE_PWD:
+      secret: __SECRET_SSO_SERVICE_PWD__
+    
+    
+  #-------------------------------------------------------------------------------------- 
+  # Resource requests and limits for OSP
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 1500m
+      memory: 3Gi   
+    
+
+#################################################################################
+#                    Identity Applications Configuration                        #
+#################################################################################
+identityapplications:
+
+  # Do you want to deploy Identity Applications (true/false)
+  deploy: __INSTALL_UA__
+
+  # Number of Identity Applications replica pods
+  replicaCount: __UA_REPLICA_COUNT__
+
+  configuration:
+  
+    #-----------------------------------------------------------------------------------  
+    # Identity Applications Administrator
+    #-----------------------------------------------------------------------------------
+      
+    # Identity Applications Administrator DN
+    UA_ADMIN: "__UA_ADMIN__" 
+
+    # Identity Applications Administrator Password
+    UA_ADMIN_PWD:
+      secret: __SECRET_UA_ADMIN_PWD__
+      
+      
+    #-----------------------------------------------------------------------------------  
+    # Identity Applications and Workflow Engine Database
+    #----------------------------------------------------------------------------------- 
+    
+    # Identity Applications and Workflow Engine Database Platform
+    # Supported values:
+    #      postgres 
+    #      oracle
+    #      mssql
+    UA_WFE_DB_PLATFORM_OPTION: "__UA_WFE_DB_PLATFORM_OPTION__"
+
+    # If Database Platform is Oracle, is the Database configured as SID or Service? (sid/service)
+    UA_ORACLE_DATABASE_TYPE: "__UA_ORACLE_DATABASE_TYPE__"
+    
+    # Identity Applications and Workflow Engine Database Server Host
+    UA_WFE_DB_HOST: __UA_WFE_DB_HOST__
+    
+    # Identity Applications and Workflow Engine Database Server Port
+    UA_WFE_DB_PORT: "__UA_WFE_DB_PORT__"
+    
+    # Identity Applications Database Name
+    UA_DATABASE_NAME: "__UA_DATABASE_NAME__"
+    
+    # Workflow Engine Database Name
+    WFE_DATABASE_NAME: "__WFE_DATABASE_NAME__"
+    
+    # Identity Applications Database Username
+    UA_WFE_DATABASE_USER: "__UA_WFE_DATABASE_USER__"
+
+    # Identity Applications Database User Password
+    UA_WFE_DATABASE_PWD:
+      secret: __SECRET_UA_WFE_DATABASE_PWD__     
+    
+  #-------------------------------------------------------------------------------------- 
+  # Resource requests and limits for Identity Applications
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------  
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 2500m
+      memory: 4Gi
+      
+#################################################################################
+#                         Form Renderer Configuration                           #
+#################################################################################
+formrenderer:
+
+  # Do you want to deploy Form Renderer (true/false)
+  deploy: __INSTALL_FR__
+
+  #-------------------------------------------------------------------------------------- 
+  # Resource requests and limits for Form Renderer
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #-------------------------------------------------------------------------------------- 
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 750m
+      memory: 2Gi
+      
+      
+#################################################################################
+#                         ActiveMQ Configuraion                                 #
+#################################################################################
+activemq: 
+
+  # Do you want to deploy ActiveMQ (true/false)
+  deploy: __INSTALL_ACTIVEMQ__
+
+  #-------------------------------------------------------------------------------------- 
+  # Resource requests and limits for ActiveMQ
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------   
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1500m
+      memory: 2Gi
+      
+      
+
+#################################################################################
+#                       Identity Reporting Configuration                        #
+#################################################################################
+identityreporting:
+
+  # Do you want to deploy Identity Reporting (true/false)
+  deploy: __INSTALL_REPORTING__
+
+  configuration:
+  
+    #-----------------------------------------------------------------------------------  
+    # Identity Reporting Administrator
+    #-----------------------------------------------------------------------------------
+          
+    # Identity Reporting Administrator DN
+    RPT_ADMIN: "__RPT_ADMIN__" 
+
+    # Identity Reporting Administrator Password
+    RPT_ADMIN_PWD:
+      secret: __SECRET_RPT_ADMIN_PWD__
+    
+    #-----------------------------------------------------------------------------------  
+    # Identity Reporting Database
+    #----------------------------------------------------------------------------------- 
+    
+    # Identity Repoting Database Platform
+    # Supported values:
+    #      postgres 
+    #      oracle
+    #      mssql
+    RPT_DATABASE_PLATFORM_OPTION: "__RPT_DATABASE_PLATFORM_OPTION__"
+    
+    # If Database Platform is Oracle, is the Database configured as SID or Service? (sid/service)
+    RPT_ORACLE_DATABASE_TYPE: "__RPT_ORACLE_DATABASE_TYPE__"
+    
+    # Identity Reporting Database Host
+    RPT_DATABASE_HOST: __RPT_DATABASE_HOST__ 
+    
+    # Identity Reporting Database Port
+    RPT_DATABASE_PORT: "__RPT_DATABASE_PORT__"
+    
+    # Identity Reporting Database Name
+    RPT_DATABASE_NAME: "__RPT_DATABASE_NAME__"
+    
+    # Identity Reporting Database User
+    RPT_DATABASE_USER: "__RPT_DATABASE_USER__"
+      
+    # Identity Reporting Database Account Password (shared)
+    RPT_DATABASE_SHARE_PASSWORD:
+      secret: __SECRET_RPT_DATABASE_SHARE_PASSWORD__ 
+        
+  #-------------------------------------------------------------------------------------- 
+  # Resource requests and limits for Identity Reporting
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 2500m
+      memory: 4Gi
+      
+      
+#################################################################################
+#              Self Service Password Reset(SSPR) Configuration                  #
+#################################################################################
+sspr:
+
+  # Do you want to deploy SSPR(true/false)
+  deploy: __INSTALL_SSPR__
+
+  configuration:
+      
+    # Specify the password that you want to create for an administrator to configure SSPR.
+    CONFIGURATION_PWD:
+      secret: __SECRET_CONFIGURATION_PWD__
+    
+  #-------------------------------------------------------------------------------------- 
+  # Resource requests and limits for SSPR
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------    
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 1500m
+      memory: 3Gi
+      
+
+#################################################################################
+#                       Identity Console Configuration                          #
+#################################################################################
+identityconsole:
+
+  # Do you want to deploy Identity Console (true/false)
+  deploy: __INSTALL_IDENTITY_CONSOLE__
+
+  configuration:
+      
+    # Do you want to use One SSO Provider (OSP) as the login method for Identity Console (y/n)
+    ID_CONSOLE_USE_OSP: "__ID_CONSOLE_USE_OSP__"
+    
+  #-------------------------------------------------------------------------------------- 
+  # Resource requests and limits for Identity Console
+  # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #--------------------------------------------------------------------------------------
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 1500m
+      memory: 3Gi
+
+
+#############################################################################################################
+#                                      Advanced Configuration                                               #
+#############################################################################################################
+
+# +--------------------------------------------------------------------------------------------+
+# | Identity Vault container objects for storing users, admins and groups.                     |
+# | The container objects will be assigned with the required password policies and the trustee |
+# | rights.                                                                                    |                                                
+# +--------------------------------------------------------------------------------------------+
+DATA_CONTAINERS:
+
+  # LDIF configuration for creating the data containers
+  DATA_CONTAINERS_LDIF: |
+__DATA_CONTAINER_LDIF__
+    
+  #--------------------------------------------------------------------------------------------------------------------------
+  # Specify DNs for Root container, Group root container, User Container and Admin container as specified in the above LDIF
+  #-------------------------------------------------------------------------------------------------------------------------- 
+
+  # Root container DN
+  ROOT_CONTAINER: "__ROOT_CONTAINER__"
+      
+  # Group Search root container DN
+  GROUP_ROOT_CONTAINER: "__GROUP_ROOT_CONTAINER__" 
+      
+  # User search container DN
+  USER_CONTAINER: "__USER_CONTAINER__"
+    
+  # Admin search container DN
+  ADMIN_CONTAINER: "__ADMIN_CONTAINER__"
+
+
+
+
+#-------------------------------------------------------------------------
+# Kubernetes Cluster Domain
+# NOTE: 
+#-------------------------------------------------------------------------
+KUBE_SUB_DOMAIN: "__KUBE_SUB_DOMAIN__"
+  

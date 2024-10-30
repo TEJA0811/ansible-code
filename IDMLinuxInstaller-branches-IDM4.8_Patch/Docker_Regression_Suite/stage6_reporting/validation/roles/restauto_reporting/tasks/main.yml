@@ -1,0 +1,71 @@
+---
+# tasks file for restauto_reporting
+
+    - name: "Save start time"
+      set_fact: 
+          t1: "{{ lookup('pipe', 'date +%Y-%m-%dT%H:%M:%S') }}"
+          
+    - name: "Creates results Directory"
+      file:
+        path: "{{ playbook_dir}}/TestLog"
+        state: directory
+        mode: '644'
+      delegate_to: localhost
+    
+    - name: "Run RestAPI automation using Maven"
+      shell: |
+              cd "{{ restapi_location }}"
+              mvn clean test
+
+    - name: "Generate Allure report for Rest Automation of Reporting"
+      shell: |
+              cd "{{ restapi_location }}"
+              allure generate --clean -o /opt/netiq/idm/apps/tomcat/webapps/allure-report
+
+    - name: "Get file names from Reporting server"
+      find: 
+        paths: "{{ restapi_location }}/TestLogs/"
+        recurse: no 
+      register: file_names
+
+    - name: "Get current log file path"
+      set_fact:
+        log_file_path: "{{ file_names.files | sort(attribute='mtime',reverse=true) | first }}"
+
+    - name: "Get current log file name"
+      set_fact:
+        log_file: "{{ log_file_path.path | basename }}"
+    
+    - name: "Fetch log file from reporting server to Ansible controller"
+      fetch: 
+        src: "{{ restapi_location }}/TestLogs/{{ log_file }}"
+        dest: "{{ results_dir }}/Regression_Reporting/"
+        flat: yes
+        
+    - name: "Fetch allure folder from reporting server to Ansible controller"
+      synchronize: 
+        src: "/opt/netiq/idm/apps/tomcat/webapps/allure-report"
+        dest: "{{ results_dir }}/Regression_Reporting/"
+        mode: pull
+
+    - name: "Fetch test results summary"
+      shell: |
+              cd "{{ results_dir }}/Regression_Reporting/"
+              tail -3 {{ log_file }} | cut -d " " -f7-|cut -d ":" -f2- |tr '\r\n' ' '|tr -s ' '| xargs > {{ results_dir }}/Regression_Reporting/RESTAPI_result
+      delegate_to: localhost
+
+    - name: "Remove testlogs"
+      file: 
+        path: "{{ restapi_location }}/TestLogs"
+        state: absent
+
+    - name: "Remove Allure results"
+      file: 
+        path: "{{ restapi_location }}/allure-results"
+        state: absent
+
+    - name: "Clear temporary Files on Ansible Controller"
+      shell: |
+         cd "{{ playbook_dir }}"
+         rm -rf TestLog
+      delegate_to: localhost

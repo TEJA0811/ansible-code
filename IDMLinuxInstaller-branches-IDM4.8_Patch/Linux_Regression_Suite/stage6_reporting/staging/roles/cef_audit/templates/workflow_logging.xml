@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--============================================================================
+  Copyright (c) 2019 MICRO FOCUS OR ONE OF ITS AFFILIATES.
+  THE ONLY WARRANTIES FOR PRODUCTS AND SERVICES OF MICRO FOCUS AND ITS AFFILIATES AND LICENSORS (MICRO FOCUS) ARE SET 
+  FORTH IN THE EXPRESS WARRANTY STATEMENTS ACCOMPANYING SUCH PRODUCTS AND SERVICES. NOTHING HEREIN SHOULD BE CONSTRUED
+  AS CONSTITUTING AN ADDITIONAL WARRANTY. MICRO FOCUS SHALL NOT BE LIABLE FOR TECHNICAL OR EDITORIAL ERRORS OR OMISSIONS CONTAINED HEREIN. 
+  THE INFORMATION CONTAINED HEREIN IS SUBJECT TO CHANGE WITHOUT NOTICE.
+  CONTAINS CONFIDENTIAL INFORMATION. EXCEPT AS SPECIFICALLY INDICATED OTHERWISE, 
+  A VALID LICENSE IS REQUIRED FOR POSSESSION, USE OR COPYING. CONSISTENT WITH FAR 12.211 AND 12.212, 
+  COMMERCIAL COMPUTER SOFTWARE, COMPUTER SOFTWARE DOCUMENTATION, AND TECHNICAL DATA FOR COMMERCIAL ITEMS 
+  ARE LICENSED TO THE U.S. GOVERNMENT UNDER VENDOR'S STANDARD COMMERCIAL LICENSE.
+  ===========================================================================-->
+  <logging xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="logging-config.xsd">
+
+    <prefix>[WORKFLOW]</prefix>
+
+    <!-- example of enabling TRACE level -->
+    <!--
+    <logger name="com.novell.soa.af" additivity="true" level="TRACE"/>
+    -->
+    <!--
+    <logger name="com.novell" additivity="true" level="INFO">
+      <appender-ref ref="CONSOLE_DEBUG"/>
+    </logger>
+    -->
+
+    <!-- Appender definitions -->
+    <appenders>
+        <!-- CONSOLE and FILE appender are defined in jboss-log4j.xml -->
+        <!-- CEF appender -->
+
+        <appender class="com.netiq.idm.logging.syslog.CEFSyslogAppender" name="WFCEF">
+            <param name="Threshold" value="INFO"/>
+            <param name="Facility" value="user"/>
+            <param name="SyslogHost" value="${com.netiq.ism.audit.cef.host:{{ groups['slm_iga'][0] }}}" />
+            <param name="SyslogPort" value="${com.netiq.ism.audit.cef.port:1468}" />
+            <param name="SyslogProtocol" value="${com.netiq.ism.audit.cef.protocol:tcp}" />
+            <param name="SyslogSslKeystoreFile" value="${com.netiq.idm.audit.cef.tls-keystore:/opt/netiq/idm/apps/jre/lib/security/cacerts}" />
+            <param name="SyslogSslKeystorePassword" value="${com.netiq.idm.audit.cef.tls-keystore-password:KeystorePassword}" />
+            <param name="CacheDir" value="${com.netiq.ism.audit.cef.cache-file-dir:/opt/netiq/idm/apps/tomcat}" />
+            <param name="CacheRolloverSize" value="2"/>
+            <param name="ApplicationName" value="WORKFLOW"/>
+            <param name="EventPrefix" value="IDM:"/>
+        </appender>
+</appenders>
+
+    <!--
+        Logger definitions
+
+        NOTE: CONSOLE & FILE appenders should be defined in (jboss-)log4j.xml file.
+        Additivity of true means the loggers defined below will inherit the appenders.
+    -->
+    <loggers>
+    	<logger name="workflow.log" level="INFO" additivity="true">                   
+            
+            <appender-ref ref="WFCEF"/>
+            
+        </logger>
+        <logger name="com.novell" level="INFO" additivity="true">
+			
+            <appender-ref ref="WFCEF"/>
+            
+        </logger>
+        <logger name="com.netiq" level="INFO" additivity="true">            
+			
+            <appender-ref ref="WFCEF"/>
+            
+        </logger>
+        <logger name="com.sssw" level="INFO" additivity="true">            
+			
+            <appender-ref ref="WFCEF"/>
+            
+        </logger>
+        <logger name="com.microfocus" level="INFO" additivity="true">            
+			
+            <appender-ref ref="WFCEF"/>
+            
+        </logger>
+    </loggers>
+   <root>
+    <priority value="INFO"/>
+  </root> 
+</logging>

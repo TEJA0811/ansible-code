@@ -1,0 +1,13 @@
+---
+  
+#Play to download IDM iso
+- name: 'Download IDM48 and IDM48_Patch iso'
+  hosts: control
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     download_iso
+  tags: idm_role_remove_tmp_dir
+...
+
+

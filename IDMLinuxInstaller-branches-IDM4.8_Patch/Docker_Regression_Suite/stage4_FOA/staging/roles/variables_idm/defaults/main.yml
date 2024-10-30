@@ -1,0 +1,77 @@
+---
+def__idmProperties_file: "{{ role_path }}/files/silent.properties"
+# defaults file for FOA Staging
+
+#### Build specific details
+
+# Major version of the product.
+marketing_major : "4"
+# Minor version of the product.
+marketing_minor : "8"
+# Revision version of the product.
+marketing_revision : "7"
+# Location of source images
+images_dir: "/home/tmp/Identity_Manager_{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}_Containers"
+
+
+network_set: "host"
+#### Container specific poperties for ENGINE
+#engine_container_ipaddress : "192.168.0.2"
+engine_container_hostname : "{{ hostvars[groups['idmengine'][0]]['ansible_facts']['hostname'] }}"
+engine_container_name : "engine-container"
+engine_shared_volume : "/data"
+engine_volumes :
+  - "{{ engine_shared_volume }}:/config" 
+#engine_files :
+#  - "XMLPipeShim.jar"
+#engine_port_mapping :
+#  - "636:636"
+#  - "389:389"
+
+
+#### Container specific poperties for AMQ
+#activemq_container_ipaddress :
+activemq_container_hostname : "{{ hostvars[groups['activemq'][0]]['ansible_facts']['hostname'] }}"
+activemq_container_name : "activemq-container"
+activemq_shared_volume : "/data/AMQ_data"
+activemq_volumes :
+  - "{{ activemq_shared_volume }}:/config"
+#activemq_files :
+#activemq_port_mapping :
+#  - "61616:61616"
+#  - "8161:8161"
+
+
+#### Container specific poperties for FOA
+#fanoutagent_container_ipaddress :
+fanoutagent_container_hostname : "{{ hostvars[groups['activemq'][0]]['ansible_facts']['hostname'] }}"
+fanoutagent_container_name : "foa-container"
+fanoutagent_shared_volume : "/data/FOA_data"
+fanoutagent_files :
+  - "sqljdbc42.jar"
+fanoutagent_volumes :
+  - "{{ fanoutagent_shared_volume }}:/config"
+  - "{{ fanoutagent_shared_volume }}/sqljdbc42.jar:/opt/novell/dirxml/fanoutagent/lib/sqljdbc42.jar"
+#fanoutagent_port_mapping : 
+
+
+#### Container specific poperties for MSSQL
+mssql_container_hostname: "{{ hostvars[groups['activemq'][0]]['ansible_facts']['hostname'] }}"
+mssql_container_name: "mssql-container"
+mssql_shared_volume: "/data/mssql"
+mssql_files :
+  - "idm_updated_for_FOA.sql"
+mssql_volumes:
+  - "{{ mssql_shared_volume }}:/config"
+#mssql_port_mapping : 
+
+
+
+
+
+
+
+
+
+
+...

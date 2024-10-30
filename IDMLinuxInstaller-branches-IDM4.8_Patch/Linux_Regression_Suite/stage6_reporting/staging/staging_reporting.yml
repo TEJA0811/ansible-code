@@ -1,0 +1,83 @@
+---
+
+# Play to revert snapshots of a VM if defined
+- name: 'Revert Snapshots'
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     variables_idm
+    when:                     false
+  - role:                     revert_snapshots
+    when:                     "vm_list  is defined"
+  tags: revert_snapshots
+
+# #Play to deploy Identity Manager Role
+# - name: 'Deploy Identity Manager Engine and Reporting'
+#   hosts: idmengine
+#   become: yes
+#   become_method: sudo
+#   roles:
+#   - role:                     idmengine
+#     when:                     "(groups[ 'idmengine' ] | length > 0) and (( vm_snapshot_name  is not defined) or (vm_snapshot_name == 'base_ansible'))"  
+#   tags: idm_role_engine
+
+# #Play to deploy Identity Manager Patch Role
+- name: 'Update Identity Manager Engine,Apps and Reporting'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     idmengine_patch
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_role_engine_patch
+  
+# #Play to download Reports and create Data sync policy
+- name: 'Run Rest API Automation to download reports and create data sync policy'
+  hosts: mvn_server
+  tasks:
+    - name: 'Remove previous Data sync policies from Sentinel'
+      postgresql_query:
+        login_host: "{{ groups['slm_iga'][0] }}"
+        db: SIEM
+        login_user: dbauser
+        login_password: novell
+        query: "DELETE FROM public.event_data_sync_policies WHERE created_by = 1;"
+      delegate_to: localhost
+
+    - name: 'Run rest API Automation scripts'
+      shell: |
+              cd /home/linux/IDMAppsRestAuto/
+              mvn clean test -Dsurefire.suiteXmlFiles=views_testng.xml
+
+    - name: "Wait for reports to get downloaded"
+      pause:
+        minutes: 2
+
+  tags: rpt_download
+
+# Play to enable CEF auditing for IDM components
+- name: 'Perform CEF Auditing and views addition for running reports'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     cef_audit
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_cef_audit
+
+#Play to remove temporary directory created by Ansible
+- name: 'Remove temporary directory created by Ansible at last'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     variables_idm
+    when:                     false
+  post_tasks:
+   - name: "Remove Temporary directory created by Ansible"
+     file: 
+       path: "{{ build_dest_location }}"
+       state: absent
+  tags: idm_role_remove_tmp_dir
+...

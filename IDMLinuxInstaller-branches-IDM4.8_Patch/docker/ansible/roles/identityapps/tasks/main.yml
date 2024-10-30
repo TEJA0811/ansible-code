@@ -1,0 +1,106 @@
+---
+# tasks file for identityapps
+
+- name : Get Identity Applications image file stats
+  local_action: stat path="{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityapplication.tar.gz"
+  register: appsfile
+
+- name : Check for image existence in Docker host
+  shell : docker images | grep identityapplication | grep {{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+  register : imagealreadyloaded
+  ignore_errors : yes
+
+- name : Copy Identity Applications image to Docker host
+  copy :
+          src : "{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityapplication.tar.gz"
+          dest : "{{ identityapps_shared_volume }}"
+  when : 
+        - appsfile.stat.exists
+        - imagealreadyloaded.rc == 1
+
+- name : Load the Identity Applications image
+  docker_image:
+    state : present
+    name : identityapplication:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+    load_path: "{{identityapps_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityapplication.tar.gz"
+    timeout: 3000
+    source: load
+  register : identityappsLoadImage
+  until: identityappsLoadImage is succeeded
+  when : imagealreadyloaded.rc == 1
+  
+- name : Copy silent.properties file to target server
+  copy :
+    src : "{{ playbook_dir }}/roles/variables/files/silent.properties"
+    dest : "{{ identityapps_shared_volume }}" 
+    
+- name : Copy OSP Tomcat keystore file to Identity Applications shared volume
+  copy :
+    src : "{{ playbook_dir }}/input/{{ OSP_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    dest : "{{ identityapps_shared_volume }}"
+    
+  
+- name : Copy Identity Applications Tomcat keystore file to target server
+  copy :
+    src : "{{ playbook_dir }}/input/{{ UA_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    dest : "{{ identityapps_shared_volume }}"
+
+  
+- name : Copy Identity Applications files to shared volume
+  copy :
+    src : "{{ playbook_dir }}/input/{{ item }}"
+    dest : "{{ identityapps_shared_volume }}"
+  loop: "{{ identityapps_files }}"
+  when: identityapps_files is defined
+
+- name : Deploy Identity Applications container
+  docker_container :
+    name : "{{ identityapps_container_name }}"
+    image : "identityapplication:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}"
+    state: started
+    stop_timeout: 300
+    hostname : "{{ UA_SERVER_HOST }}"
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+        ipv4_address : "{{ identityapps_container_ipaddress }}"
+    volumes : "{{ identityapps_volumes | default([]) }}"
+    ports : "{{ identityapps_port_mapping | default([]) }}"
+    dns_servers : "{{ dns_list | default([]) }}"
+    env:
+      SILENT_INSTALL_FILE : /config/silent.properties
+  notify : Deploy Identity Application Container
+
+- name: Wait until Tomcat in Identity Applications container is up and running
+  shell: cat "{{ identityapps_shared_volume }}/userapp/log/idmconfigure.log"
+  register: data
+  until : "'Completed configuration of : Identity Applications' in data.stdout"
+  delay : 15
+  retries : 120
+
+- name : Import OSP certificate to idm.jks
+  shell : "docker exec {{identityapps_container_name}} /opt/netiq/common/jre/bin/keytool -importkeystore -srckeystore {{ OSP_COMM_TOMCAT_KEYSTORE_FILE }} -srcstorepass {{ OSP_COMM_TOMCAT_KEYSTORE_PWD }} -destkeystore /opt/netiq/idm/apps/tomcat/conf/idm.jks -deststorepass {{ IDM_KEYSTORE_PWD }} -noprompt"
+
+- name : Restart Identity Applications container
+  shell : "docker restart {{identityapps_container_name}}"
+
+- name : Delete Identity Applications tarball
+  file :
+          path : "{{ identityapps_shared_volume }}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_identityapplication.tar.gz"
+          state : absent
+          
+- name: Delete silent.properties file
+  file:
+    path: "{{ identityapps_shared_volume }}/silent.properties"
+    state: absent
+    
+- name: Delete Identity Applications Tomcat keystore file
+  file:
+    path: "{{ identityapps_shared_volume }}/{{ UA_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    state: absent
+    
+- name: Delete OSP Tomcat keystore file
+  file:
+    path: "{{ identityapps_shared_volume }}/{{ OSP_COMM_TOMCAT_KEYSTORE_BASENAME }}"
+    state: absent
+

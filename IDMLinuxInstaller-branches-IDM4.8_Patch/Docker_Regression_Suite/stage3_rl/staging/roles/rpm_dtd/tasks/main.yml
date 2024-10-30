@@ -1,0 +1,38 @@
+---
+# tasks file for rpm_dtd
+
+- name: "Download RPM zip for DTD driver"
+  get_url:
+      dest: "{{ playbook_dir }}/dirxml_flatfile_Driver.zip"
+      url: "{{ dtd_rpm_url }}"
+  delegate_to: 'localhost'
+  tags: rpm_download
+
+- name: "Unarchive RPM zip"
+  unarchive: 
+      src:  "{{ playbook_dir }}/dirxml_flatfile_Driver.zip"
+      dest: "{{ playbook_dir }}/"
+  delegate_to: 'localhost'
+
+- name: 'Copy updated rpms to target server'
+  copy: 
+      src: "{{ playbook_dir }}/dirxml_flatfile_Driver/linux/"
+      dest: "{{ build_dest_location }}"
+      owner: root
+      group: root
+      mode: '644'
+
+- name: 'Install rpms'
+  shell: |
+        # ndsmanage stopall
+        rpm -Uvh --force "{{ build_dest_location }}/*.rpm"
+        # ndsmanage startall
+
+- name: 'Remove RPM zip'
+  file:
+      path: "{{ item }}"
+      state: absent
+  with_items:
+    - "{{ playbook_dir }}/dirxml_flatfile_Driver.zip"
+    - "{{ playbook_dir }}/dirxml_flatfile_Driver"
+  delegate_to: 'localhost'

@@ -1,0 +1,15 @@
+---
+# handlers file for revert_snapshot
+    - name: handler_for_VM_stop
+      debug:
+        msg: "groups['foa_node'][0] has been stopped to revert snapshot"
+
+    - name: handler_for_VM_revert
+      debug:
+        msg:  "groups['foa_node'][0] has been reverted to required snapshot" 
+
+    - name: handler_for_VM_start
+      debug:
+        msg: "groups['foa_node'][0] has been started"
+        
+...

@@ -1,0 +1,44 @@
+---
+# Play to revert snapshots of a VM if defined
+- name: 'Revert Snapshots'
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     variables_foa
+    when:                     false
+  - role:                     revert_snapshots
+    when:                     "vm_list  is defined"
+  tags: revert_snapshots
+  
+  
+#Play to deploy Identity Manager Patch Role
+- name: 'Update Identity Manager Engine'
+  hosts: idmupgrade
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     idmengine_patch
+    when:                     "groups[ 'idmupgrade' ] | length > 0"
+  tags: idm_role_engine_patch
+  
+#Play to deploy Fanout agent Role
+- name:  'Deploy Fanout agent Base'
+  hosts:  foa_node
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     foa_base
+    when:                     "groups[ 'foa_node' ] | length > 0 and (( vm_snapshot_name  is not defined) or (vm_snapshot_name == 'base_ansible'))"
+  tags: foa_role
+
+#Play to deploy Fanout agent Patch Role
+- name: 'Update Fanout agent'
+  hosts: foa_node
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     foa_patch
+    when:                     "groups[ 'foa_node' ] | length > 0"
+  tags: foa_patch
+...

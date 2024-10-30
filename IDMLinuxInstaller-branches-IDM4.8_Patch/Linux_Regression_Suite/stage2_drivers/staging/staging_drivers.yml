@@ -1,0 +1,61 @@
+---
+
+# Play to revert snapshots of a VM
+- name: "Revert snapshot"
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  roles:
+    - role: variables_idm
+      when: false
+    - role: revert_snapshots
+      when: "vm_snapshot_name is defined"
+  tags: revert_snapshot
+  
+#Play to deploy Identity Manager Role
+- name: 'Deploy Identity Manager Engine'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     idmengine
+    when:                     "(groups[ 'idmengine' ] | length > 0) and (( vm_snapshot_name  is not defined) or (vm_snapshot_name == 'base_ansible'))"  
+  tags: idm_role_engine
+
+# Play to update DTD driver
+- name: 'Update DTD driver rpm'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+    - role: variables_idm
+      when: false
+    - role: rpm_dtd
+  tags: update_rpm
+  
+#Play to deploy Identity Manager Patch Role
+- name: 'Update Identity Manager Engine'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     idmengine_patch
+    when:                     "groups[ 'idmengine' ] | length > 0"
+  tags: idm_role_engine_patch
+  
+#Play to remove temporary directory created by Ansible
+- name: 'Remove temporary directory created by Ansible at last'
+  hosts: idmengine
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     variables_idm
+    when:                     false
+  post_tasks:
+   - name: "Remove Temporary directory created by Ansible"
+     file: 
+       path: "{{ build_dest_location }}"
+       state: absent
+  tags: idm_role_remove_tmp_dir
+
+...

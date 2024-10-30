@@ -1,0 +1,32 @@
+version: 1
+
+dn: ___DRIVERSET_NAME___
+changetype: add
+DirXML-LogLimit: 0
+DirXML-ConfigValues:: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48Y29u
+ ZmlndXJhdGlvbi12YWx1ZXM+Cgk8ZGVmaW5pdGlvbnMvPgo8L2NvbmZpZ3VyYXRpb24tdmFsdWVzP
+ g==
+objectClass: DirXML-DriverSet
+objectClass: Top
+objectClass: Partition
+objectClass: nsimPasswordPolicyAux
+
+dn: cn=DirXML-PasswordPolicy,cn=Password Policies,cn=Security
+changetype: add
+nsimPwdRuleEnforcement: FALSE
+nspmSpecialAsLastCharacter: TRUE
+nspmSpecialAsFirstCharacter: TRUE
+nspmSpecialCharactersAllowed: TRUE
+nspmNumericAsLastCharacter: TRUE
+nspmNumericAsFirstCharacter: TRUE
+nspmNumericCharactersAllowed: TRUE
+description: This Password Policy is used by IDM Engine
+nspmMaximumLength: 64
+nspmConfigurationOptions: 596
+passwordUniqueRequired: FALSE
+passwordMinimumLength: 1
+passwordAllowChange: TRUE
+objectClass: nspmPasswordPolicy
+objectClass: Top
+cn: DirXML-PasswordPolicy
+nsimAssignments: ___DRIVERSET_NAME___

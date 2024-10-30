@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "osp-test-connection"
+  labels:
+    {{- include "identity-manager.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ .Values.osp.nameOverride }}:{{ .Values.osp.service.ports.httpPort }}'] 
+  restartPolicy: Never

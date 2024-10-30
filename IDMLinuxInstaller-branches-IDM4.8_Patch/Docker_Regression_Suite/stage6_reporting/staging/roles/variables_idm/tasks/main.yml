@@ -1,0 +1,34 @@
+---
+# tasks file for variables_idm
+- name: "Check if '{{ def__idmProperties_file }}' exists locally for conversion"
+  stat:
+    path: '{{ def__idmProperties_file }}'
+  delegate_to: 'localhost'
+  register: register_silent_props
+  tags: [ vars_conversion_necessary_check, vars_convert_silent ]
+
+ 
+- name: 'Proceed with silent properties conversion'
+  block:
+
+  - name: "Convert silent property file to temporary yaml file"
+    shell: |
+          cd "{{ role_path }}/files"
+          sh prop2yaml.sh "{{ def__idmProperties_file }}"
+    delegate_to: 'localhost'
+
+  - name: "Load Temporary Yaml file to ansible at runtime"
+    include_vars: vars/silent.yml
+    notify: handler_for_message - load_vars
+    tags: load_vars
+    delegate_to: 'localhost'
+
+  - name: 'Remove the newly converted silent properties yaml file'
+    file:
+      path: '{{ role_path }}/vars/silent.yml'
+      state: absent
+    delegate_to: 'localhost'
+  tags: vars_convert_silent
+  when: register_silent_props.stat.exists
+
+... 

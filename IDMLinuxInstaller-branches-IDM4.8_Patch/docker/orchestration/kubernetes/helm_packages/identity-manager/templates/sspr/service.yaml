@@ -1,0 +1,21 @@
+{{- if (include "identity-manager.sspr.deploy" .) }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "identity-manager.sspr.name" . }}
+  annotations:
+    {{- toYaml .Values.sspr.service.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.sspr.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.sspr.service.type }}
+  ports:
+    - port: {{ .Values.sspr.service.ports.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "identity-manager.sspr.selectorLabels" . | nindent 4 }}
+
+{{- end }}

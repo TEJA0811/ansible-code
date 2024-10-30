@@ -1,0 +1,2 @@
+- Remote Loader has been installed. You can check the status of the component using the following command:
+    kubectl get pod --namespace {{ .Release.Namespace }}

@@ -1,0 +1,14 @@
+---
+# handlers file for CoreDNS
+
+- name : Pull CoreDNS image
+  debug :
+    msg : CoreDNS image is pulled successfully
+
+- name : Load CoreDNS Image
+  debug : 
+    msg : CoreDNS image is loaded successfully
+
+- name : Deploy CoreDNS Container
+  debug : 
+    msg : CoreDNS Container is created

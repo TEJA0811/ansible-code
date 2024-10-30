@@ -1,0 +1,10 @@
+---
+# handlers file for activemq
+
+- name : Load activemq Image
+  debug : 
+    msg : ActiveMQ image is loaded successfully
+
+- name : Deploy activemq Container
+  debug : 
+    msg : ActiveMQ Container is created

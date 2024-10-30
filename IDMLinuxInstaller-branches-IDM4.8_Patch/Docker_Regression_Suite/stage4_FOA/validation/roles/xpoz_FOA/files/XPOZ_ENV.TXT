@@ -1,0 +1,11 @@
+//VARIABLES
+SRV1=s4-engine-container
+TreeOrg=OU=servers.O=system.T=S4-ENGINE-CONTAINER_TREE
+AdminPassword=novell
+ServerAddress=10.71.35.202
+Remote=False
+DBType=MS
+DBVer=CONTAINER
+DBServerName=MSSQL
+DBServerAddress=10.71.35.214
+ConnectionObjects=conn_1

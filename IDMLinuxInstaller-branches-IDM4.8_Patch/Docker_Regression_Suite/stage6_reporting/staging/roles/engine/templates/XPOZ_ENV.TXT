@@ -1,0 +1,16 @@
+//VARIABLES
+SRV1={{ ID_VAULT_SERVERNAME }}
+AdminPassword={{ ID_VAULT_PASSWORD }}
+TreeOrg=OU=servers.O=system.T={{ID_VAULT_TREENAME|upper}}
+ServerAddress={{ ansible_default_ipv4.address }}
+ftpServerAddr={{ ansible_default_ipv4.address }}
+Remote=false
+ftpUser=nds
+ftpPassword=novell
+eDirLDAPPort=389
+queryDir=/data/idm/query
+inputDir=/data/idm/input
+outputDir=/data/idm/output
+containerQueryDir=/config/idm/query
+containerInputDir=/config/idm/input
+containerOutputDir=/config/idm/output

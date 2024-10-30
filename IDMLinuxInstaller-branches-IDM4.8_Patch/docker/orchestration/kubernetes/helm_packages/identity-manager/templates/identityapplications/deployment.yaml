@@ -1,0 +1,243 @@
+{{- if (include "identity-manager.identityapplications.deploy" .) }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "identity-manager.identityapplications.name" . }}
+  labels:
+    {{- include "identity-manager.identityapplications.labels" . | nindent 4 }}
+spec:
+  strategy:
+    type: Recreate
+  {{- if not .Values.identityapplications.autoscaling.enabled }}
+  replicas: {{ .Values.identityapplications.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "identity-manager.identityapplications.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.identityapplications.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "identity-manager.identityapplications.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- include "identity-manager.imagePullSecrets" . | nindent 8 }}
+      serviceAccountName: {{ include "identity-manager.identityapplications.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.identityapplications.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-identityapplications
+          image: {{ include "identity-manager.identityutils.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+          env:
+
+            {{- include "identity-manager.configuration.envs" 
+            (dict
+              "top" .
+            ) | nindent 12 }}
+
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-deployment-data
+
+          command:
+              - "/bin/bash"
+              - "-c"
+              - >
+
+                until nc -z $ID_VAULT_HOST $ID_VAULT_HEALTH_CHECK_PORT > /dev/null; do echo Waiting for eDirectory service to start.; sleep 2; done;
+
+                {{ include "identity-manager.generate-secret-properties.command" 
+                (dict 
+                  "top" . 
+                  "secretMountFolder" "/mnt/secrets-store" 
+                  "secretPropertiesPath" "/shared-conf/secret.properties"
+                ) | nindent 16 }}
+
+                {{ include "identity-manager.add-keystore-pwd-to-secret-properties.command" 
+                (dict 
+                  "top" .
+                  "secretMountFolder" "/mnt/key-store-pwd" 
+                  "secretPropertiesPath" "/shared-conf/secret.properties"
+                ) | nindent 16 }}
+
+                {{ include "identity-manager.setup-tls-cert-and-key.command" 
+                (dict
+                  "top" .
+                  "tlsMountFolder" "/mnt/tls"
+                  "outputFolder" "/shared-tls"
+                ) | nindent 16 }}
+
+                echo "$DATA_CONTAINERS_LDIF" > /shared-conf/data_container.ldif;
+
+          volumeMounts:
+            
+            # Mount secrets, keys and certificate from secret vault
+          
+            {{- include "identity-manager.secrets.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/secrets-store"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.key-store-pwd.volumeMount" 
+            (dict 
+              "top" .
+              "mountPath" "/mnt/key-store-pwd"
+            ) | nindent 12 }}
+   
+            {{- include "identity-manager.ingress.tls.volumeMount" 
+            (dict 
+              "top" . 
+              "mountPath" "/mnt/tls"
+            ) | nindent 12 }}
+
+            # Mount shared volume for passing secret, keys and certificate to main container
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-ingress-tls-cert" 
+              "mountPath" "/shared-tls"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-conf" 
+              "mountPath" "/shared-conf"
+            ) | nindent 12 }}
+
+      containers:
+        - name: {{ include "identity-manager.identityapplications.name" . }}
+          securityContext:
+            {{- toYaml .Values.identityapplications.securityContext | nindent 12 }}
+          image: {{ include "identity-manager.identityapplications.image" . | quote }}
+          imagePullPolicy: {{ include "identity-manager.imagePullPolicy" . | quote }}
+          env:
+
+            {{- include "identity-manager.configuration.envs" 
+            (dict
+              "top" .
+            ) | nindent 12 }}
+
+            - name: SECRET_PROPERTY_PATH
+              value: /shared-conf/secret.properties
+            - name: CUSTOM_CONTAINER_LDIF_PATH
+              value: /shared-conf/data_container.ldif
+
+            {{- if eq .Values.AZURE_POSTGRESQL_REQUIRED "y" }}
+            - name: UA_PG_DATABASE_ROOT_CRT
+              value: /mnt/db-root-cert/root.pem
+            {{- end }}
+
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-deployment-data
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.identityapplications.service.ports.httpPort }}
+              protocol: TCP
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+          readinessProbe:
+            exec:
+              command:
+              - cat 
+              - /opt/netiq/idm/apps/tomcat/logs/catalina.out
+            failureThreshold: 180
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.identityapplications.resources | nindent 12 }}
+          volumeMounts:
+
+            {{- include "identity-manager.shared-persistent.volumeMount" 
+            (dict
+              "mountPath" "/config"
+            ) | nindent 12 }}
+            
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-ingress-tls-cert" 
+              "mountPath" "/config/certificates"
+            ) | nindent 12 }}
+
+            {{- include "identity-manager.shared.volumeMount" 
+            (dict 
+              "volumeName" "shared-conf" 
+              "mountPath" "/shared-conf"
+            ) | nindent 12 }}
+
+            {{- if eq .Values.AZURE_POSTGRESQL_REQUIRED "y" }}
+            {{- include "identity-manager.db-root-crt.volumeMount" 
+            (dict 
+              "mountPath" "/mnt/db-root-cert"
+            ) | nindent 12 }}
+            {{- end }}
+            
+      volumes:
+
+        {{- include "identity-manager.shared-persistent.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+       
+        {{- include "identity-manager.secrets.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+
+        {{- include "identity-manager.key-store-pwd.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+
+        {{- if eq .Values.AZURE_POSTGRESQL_REQUIRED "y" }}
+        {{- include "identity-manager.db-root-crt.volume" 
+        (dict
+          "secretName" "identity-manager-db-ssl-root-crt"
+        ) | nindent 8 }}
+        {{- end }}
+        
+        {{- include "identity-manager.ingress.tls.volume" 
+        (dict
+          "top" .
+        ) | nindent 8 }}
+        
+        {{- include "identity-manager.shared.volume" 
+        (dict 
+          "name" "shared-ingress-tls-cert"
+        ) | nindent 8 }}
+
+        {{- include "identity-manager.shared.volume" 
+        (dict 
+          "name" "shared-conf"
+        ) | nindent 8 }}
+        
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityapplications.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityapplications.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.identityapplications.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- end }}

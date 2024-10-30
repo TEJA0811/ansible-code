@@ -1,0 +1,77 @@
+---
+# tasks file for xpoz_engine
+    - name: "Download Build Number"
+      uri: url="{{ idm_485_build_number }}" return_content="yes"
+      register: idm_485_build_no
+      delegate_to: localhost
+      
+    - name: "Copy XPOZ_ENV.txt to XPOZ Server"
+      win_copy:
+         src: XPOZ_ENV.TXT
+         dest: C:\CICD_pipeline\stage2_drivers\XPOZv61_20080728-W\
+         backup: yes
+  
+    - name: "Remove temporary console file(if present)"
+      win_file:
+          path: C:\CICD_pipeline\stage2_drivers\console.txt
+          state: absent
+           
+    - name: "Creates results Directory"
+      file:
+        path: "{{ playbook_dir}}/results_xpoz"
+        state: directory
+        mode: '644'
+      delegate_to: 'localhost'
+
+    - name: "Run XPOZ for Drivers"
+      win_shell: .\XPOZConsole.exe C:\CICD_pipeline\stage2_drivers\DelimitedTextDriver\DelimitedText.env >>C:\CICD_pipeline\stage2_drivers\console.txt
+      args:
+           chdir: C:\CICD_pipeline\stage2_drivers\XPOZv61_20080728-W
+      ignore_errors: true
+
+    - name: "Fetch files from XPOZ Server to Ansible Controller"
+      fetch:
+        src: "{{ item }}"
+        dest: "{{ playbook_dir}}/results_xpoz/"
+        flat: yes
+      with_items:
+          - "C:\\CICD_pipeline\\stage2_drivers\\console.txt"
+          - "C:\\CICD_pipeline\\stage2_drivers\\DelimitedTextDriver\\Delimited Text Log.html"
+          - "C:\\CICD_pipeline\\stage2_drivers\\DelimitedTextDriver\\Delimited Text Log_tc.html"
+          - "C:\\CICD_pipeline\\stage2_drivers\\DelimitedTextDriver\\Delimited Text Log_err.html"
+
+    - name: "Register Test Results"
+      shell: |
+           dos2unix "{{ playbook_dir }}/results_xpoz/console.txt"
+           awk '/returned: 0/{flag=1; next} /!!! STOPPED !!!/{flag=0} flag' "{{ playbook_dir }}/results_xpoz/console.txt"
+      register: test_results
+      delegate_to: 'localhost'
+
+    - name: "Send e-mail to Stakeholders"
+      mail:
+        host: "{{ smtp_host }}"
+        port: "{{ smtp_port }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        subject: 'XPOZ Results for RL IDM 485 Build {{ idm_485_build_no.content }}'
+        body: |
+           Please find the XPOZ Test Results.
+           Started at "{{ ansible_date_time.date }} {{ ansible_date_time.time }}"
+           "{{ test_results.stdout }}"
+              
+        from: "{{ from_user }}"
+        to:
+          - "{{ to_user }}"
+        attach:
+         -  "{{ playbook_dir }}/results_xpoz/Delimited Text Log.html"
+         -  "{{ playbook_dir }}/results_xpoz/Delimited Text Log_tc.html"
+         -  "{{ playbook_dir }}/results_xpoz/Delimited Text Log_err.html"
+      delegate_to: 'localhost'
+
+    #- name: "Delete temporary XPOZ ENV File"
+    #  file:
+    #     path: "{{ role_path }}/files/XPOZ_ENV.TXT"
+    #     state: absent
+    #  delegate_to: localhost
+
+...

@@ -1,0 +1,10 @@
+---
+# Play to send a consolidated mail
+- name: 'consolidated mail'
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     consolidated_report
+  tags: consolidated mail
+...

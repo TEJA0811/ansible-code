@@ -1,0 +1,112 @@
+---
+# tasks file for idmengine
+    - name: 'Create Temporary Directory on Target Server for ansible'
+      file:
+          path: "{{ build_dest_location }}"
+          state: directory
+          mode: '644'
+      notify: handler_for_message - temp_dir_target
+      tags: temp_dir_target
+
+    - name: "Copy local {{ idm_48_iso_name }} build to Target Server"
+      copy:
+          src: "{{ build_src_location }}/{{ idm_48_iso_name }}"
+          dest: "{{ build_dest_location }}/{{ idm_48_iso_name }}"
+      notify: handler_for_message - copy_iso_to_target
+      tags: copy_iso_to_target
+
+    - name: "Unmount the mount location if mounted"
+      mount:
+         path: "{{ build_mount_location }}"
+         state: unmounted
+      notify: handler_for_message - umount_iso_if_present
+      tags: umount_iso_if_present
+
+    - name: "Mount downloaded build on Target Server "
+      mount:
+         path: "{{ build_mount_location }}"
+         src: "{{build_dest_location}}/{{ idm_48_iso_name }}"
+         state: mounted
+         fstype: iso9660
+      notify: handler_for_message - build_mount
+      tags: build_mount
+
+    - name: "Copy Engine Silent Properties file to IDM Engine Server"
+      template:
+           src: "{{ silent_prop_engine }}"
+           dest: "{{ build_dest_location}}"
+           owner: root
+           group: root
+           mode: '644'
+      notify: handler_for_message - copy_engine_silent_prop
+      tags: copy_engine_silent_prop
+    
+    - name: "Copy Custom Driverset ldif file to IDM Engine Server"
+      copy:
+           src: files/ldif/
+           dest: "{{ CUSTOM_DRIVERSET_CONTAINER_LDIF_PATH | dirname }}"
+           owner: root
+           group: root
+           mode: '644'
+      notify: handler_for_message - copy_custom_driverset_ldif
+      tags: copy_custom_driverset_ldif
+      when: ID_VAULT_DEPLOY_CTX != "o=system"
+
+    - name: "Install IDM Engine on Target Server"
+      shell: |
+           cd "{{ build_mount_location }}"
+           ./install.sh -ssc -s -f "{{ build_dest_location }}/silent_ansible_engine.properties"
+      notify: handler_for_message - install_engine
+      tags: install_engine
+
+    - name: "Configure IDM Engine on Target Server"
+      shell: |
+           cd "{{ build_mount_location }}"
+           ./configure.sh -ssc -s -f "{{ build_dest_location }}/silent_ansible_engine.properties"
+      notify: 
+           - handler_for_message - configure_engine
+           - handler_for_task - remove_property_file
+      tags: configure_engine
+
+    - name: "Perform XPOZ related tasks if XPOZ server is defined"
+      block:
+         - name: "Prepare XPOZ.ENV.TXT for XPOZ"
+           template:
+              src: XPOZ_ENV.TXT
+              dest: "{{ playbook_dir }}/../validation/roles/xpoz_engine/files/XPOZ_ENV.TXT"
+              owner: root
+              group: root
+              mode: '644'
+           delegate_to: 'localhost' 
+
+         - name: "Copy Required files to Engine Server"
+           copy:
+             src: files/xpoz/
+             dest: "{{ build_dest_location}}"
+             owner: root
+             group: root
+             mode: '644'
+        
+         - name: "Perform XPOZ Tasks on IDM Engine Server"
+           shell: |
+             . /opt/novell/eDirectory/bin/ndspath  >"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/ldapconfig set  "Require TLS for Simple Binds with Password=no" -a "{{ ID_VAULT_ADMIN }}" -w "{{ ID_VAULT_PASSWORD }}" >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/ldapmodify  -h "{{ansible_default_ipv4.address}}" -D "{{ ID_VAULT_ADMIN_LDAP }}" -w "{{ ID_VAULT_PASSWORD }}" -f "{{ build_dest_location }}/modify_trustees.ldif" >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -i "{{ ID_VAULT_ADMIN }}" "{{ ID_VAULT_TREENAME }}"  -h "{{ansible_default_ipv4.address}}" -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}/IDVault/nmas/NmasMethods/Novell/CertMutual/config.txt" -h "{{ansible_default_ipv4.address }}"  -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}/IDVault/nmas/NmasMethods/Novell/ChallengeResponse/config.txt" -h "{{ ansible_default_ipv4.address }}" -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}/IDVault/nmas/NmasMethods/Novell/DigestMD5/config.txt" -h "{{ ansible_default_ipv4.address }}" -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}/IDVault/nmas/NmasMethods/Novell/GSSAPI/config.txt" -h "{{ ansible_default_ipv4.address }}" -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}/IDVault/nmas/NmasMethods/Novell/NDS/config.txt" -h "{{ ansible_default_ipv4.address }}"  -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}/IDVault/nmas/NmasMethods/Novell/SAML/config.txt" -h "{{ ansible_default_ipv4.address }}"  -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}//IDVault/nmas/NmasMethods/Novell/SimplePassword/config.txt" -h "{{ ansible_default_ipv4.address }}"  -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/nmasinst -addmethod "{{ ID_VAULT_ADMIN }}"  "{{ ID_VAULT_TREENAME }}" "{{ build_mount_location }}/IDVault/nmas/NmasMethods/Novell/scram/config.txt" -h "{{ ansible_default_ipv4.address }}" -w "{{ ID_VAULT_PASSWORD }}"  >>"{{ build_dest_location }}/tmp.log"
+             cp -rvf  "{{build_dest_location }}/XMLPipeShim.jar" /opt/novell/eDirectory/lib/dirxml/classes/  >>"{{ build_dest_location }}/tmp.log"
+             chmod 777 /opt/novell/eDirectory/lib/dirxml/classes/XMLPipeShim.jar  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/ndsmanage stopall  >>"{{ build_dest_location }}/tmp.log"
+             /opt/novell/eDirectory/bin/ndsmanage startall  >>"{{ build_dest_location }}/tmp.log"
+      when: "groups[ 'xpoz_server' ] | length > 0 and inventory_hostname == groups['idmengine'][0]"
+      
+ 
+    - meta: flush_handlers
+...

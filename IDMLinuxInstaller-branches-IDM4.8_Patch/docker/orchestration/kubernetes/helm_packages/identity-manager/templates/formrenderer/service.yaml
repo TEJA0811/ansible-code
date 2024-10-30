@@ -1,0 +1,21 @@
+{{- if (include "identity-manager.formrenderer.deploy" .) }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "identity-manager.formrenderer.name" . }}
+  annotations:
+    {{- toYaml .Values.formrenderer.service.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.formrenderer.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.formrenderer.service.type }}
+  ports:
+    - port: {{ .Values.formrenderer.service.ports.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "identity-manager.formrenderer.selectorLabels" . | nindent 4 }}
+
+{{- end }}

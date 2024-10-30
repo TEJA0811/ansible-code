@@ -1,0 +1,19 @@
+---
+# handlers file for variables_idm
+    - name: handler_for_message - check_iso_locally
+      debug:
+        msg: "{{ idm_48_iso_name }} is available on Control Server"
+
+    - name: handler_for_message - temp_dir_src
+      debug:
+        msg: Temp directory is created on Control Server
+
+    - name: handler_for_message - build_download
+      debug:
+        msg: Build Downloaded Successfully
+        
+    - name: handler_for_message - check_service_locally
+      debug:
+        msg: "{{ service_pack_iso_name }} is available on Control Server"
+
+

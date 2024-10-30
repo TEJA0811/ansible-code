@@ -1,0 +1,99 @@
+---
+# tasks file for osp_use
+  
+- name : Get OSP image file stats
+  local_action: stat path="{{ images_dir }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_osp.tar.gz"
+  register: ospfile
+
+- name : Check for image existence in Docker host
+  shell : docker images | grep osp | grep {{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+  register : imagealreadyloaded
+  ignore_errors : yes
+
+- name : Copy OSP image to Docker host
+  copy :
+          src : "{{ images_dir }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_osp.tar.gz"
+          dest : "{{ osp_shared_volume }}"
+  when : 
+        - ospfile.stat.exists
+        - imagealreadyloaded.rc == 1
+
+- name : Load the OSP image
+  docker_image:
+    state : present
+    name: osp:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+    load_path: "{{osp_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_osp.tar.gz"
+    timeout: 3000
+    source: load
+  notify : Load OSP Image
+  when : imagealreadyloaded.rc == 1
+
+# - name : Copy silent.properties file to target server
+#   copy :
+#     src : "{{ playbook_dir }}/roles/variables/files/silent.properties"
+#     dest : "{{ osp_shared_volume }}"
+    
+# - name : Copy OSP files to shared volume
+#   copy :
+#     src : "{{ role_path }}/files/{{ item }}"
+#     dest : "{{ osp_shared_volume }}"
+#   loop: "{{ osp_files }}"
+#   when: osp_files is defined
+
+- name : Deploy OSP container
+  docker_container :
+    name : "{{ osp_container_name }}"
+    #image : "{{ repository }}osp:latest"
+    image : "osp:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}"
+    state: started
+    stop_timeout: 300
+    hostname : "{{ SSO_SERVER_HOST }}"
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+        # ipv4_address : "{{ osp_container_ipaddress }}"
+    volumes : "{{ osp_volumes | default([]) }}"
+    ports : "{{ osp_port_mapping | default([]) }}"
+    # dns_servers : "{{ dns_list | default([]) }}"
+    env:
+      SILENT_INSTALL_FILE : /config/silent.properties
+  tags : deploy_osp_container
+  notify : Deploy OSP Container
+
+
+# The below task is not working as docker host is unable to communicate to container IP. Solution is to make another small container and execute the below task inside the container
+#- name: 'Wait until Tomcat in OSP Container is up and running'
+#  uri:
+#    url: 'https://{{osp_container_hostname}}:{{osp_tomcat_port}}/osp/a/idm/auth/oauth2/.well-known/openid-configuration'
+#    method: GET
+#    validate_certs: false
+#  register: register_connection
+#  until: register_connection.status == 200
+#  delay: 10
+#  retries: 10
+
+- name: Wait until Tomcat in OSP container is up and running
+  shell: cat "{{ osp_shared_volume }}/osp/log/idmconfigure.log"
+  register: data
+  until : "'Tomcat started' in data.stdout"
+  delay : 15
+  retries : 30
+
+- name : Delete OSP tarball
+  file :
+          path : "{{ osp_shared_volume }}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_osp.tar.gz"
+          state : absent
+
+- name : Modify OSP shutdown port
+  shell: |
+        sed -i "s~8005~18005~g" /data/osp/tomcat/conf/server.xml
+        docker restart "{{ osp_container_name }}"
+
+- name: "Pause for OSP to start"
+  pause:
+    seconds: 45
+          
+# - name: Delete silent.properties file
+#   file:
+#     path: "{{ osp_shared_volume }}/silent.properties"
+#     state: absent

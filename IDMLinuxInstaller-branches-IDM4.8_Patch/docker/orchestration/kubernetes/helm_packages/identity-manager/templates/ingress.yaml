@@ -1,0 +1,183 @@
+{{- if .Values.ingress.enabled -}} 
+{{- $fullName := include "identity-manager.fullname" . -}}
+{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion:  networking.k8s.io/v1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "identity-manager.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      {{- if .Values.secret_manager.kubernetesSecret.use }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+      {{- else }}
+      secretName: {{ .Release.Name }}-ingress-tls-csi
+      {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          # OSP
+          - path: /osp(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service: 
+                name: {{ .Values.osp.nameOverride }}
+                port:
+                  number: {{ .Values.osp.service.ports.httpPort }} 
+          # Apps
+          - path: /idmdash(/|$)(.*)
+            pathType: Prefix
+            backend:
+                service:
+                  name: {{ .Values.identityapplications.nameOverride }}
+                  port: 
+                    number: {{ .Values.identityapplications.service.ports.httpPort }}
+          - path: /idmadmin(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityapplications.nameOverride }}
+                port: 
+                  number: {{ .Values.identityapplications.service.ports.httpPort }}
+          - path: /IDMProv(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityapplications.nameOverride }}
+                port: 
+                  number: {{ .Values.identityapplications.service.ports.httpPort }}
+          - path: /workflow(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityapplications.nameOverride }}
+                port:
+                  number:  {{ .Values.identityapplications.service.ports.httpPort }}
+          - path: /idmappsdoc(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityapplications.nameOverride }}
+                port:
+                  number:  {{ .Values.identityapplications.service.ports.httpPort }}
+          # Reporting
+          - path: /IDMRPT(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityreporting.nameOverride }}
+                port: 
+                  number: {{ .Values.identityreporting.service.ports.httpPort }}
+          - path: /IDMRPT-CORE(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityreporting.nameOverride }}
+                port:
+                  number:  {{ .Values.identityreporting.service.ports.httpPort }}
+          - path: /idmdcs(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityreporting.nameOverride }}
+                port: 
+                  number: {{ .Values.identityreporting.service.ports.httpPort }}
+          - path: /IDMDCS-CORE(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityreporting.nameOverride }}
+                port: 
+                  number: {{ .Values.identityreporting.service.ports.httpPort }}
+          - path: /rptdoc(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityreporting.nameOverride }}
+                port: 
+                  number: {{ .Values.identityreporting.service.ports.httpPort }}
+          - path: /dcsdoc(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityreporting.nameOverride }}
+                port: 
+                  number: {{ .Values.identityreporting.service.ports.httpPort }}
+          # Form Rederer
+          - path: /forms(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.formrenderer.nameOverride }}
+                port:
+                  number:  {{ .Values.formrenderer.service.ports.httpPort }}
+          - path: /ospconfig(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.formrenderer.nameOverride }}
+                port: 
+                  number: {{ .Values.formrenderer.service.ports.httpPort }}
+          - path: /WFHandler(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.formrenderer.nameOverride }}
+                port: 
+                  number: {{ .Values.formrenderer.service.ports.httpPort }}
+          - path: /oauth(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.formrenderer.nameOverride }}
+                port: 
+                  number: {{ .Values.formrenderer.service.ports.httpPort }}
+          # SSPR
+          - path: /sspr(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.sspr.nameOverride }}
+                port: 
+                  number: {{ .Values.sspr.service.ports.httpPort }}
+          # Identity Console
+          - path: /identityconsole(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityconsole.nameOverride }}
+                port: 
+                  number: {{ .Values.identityconsole.service.ports.httpPort }}
+          - path: /eDirAPI(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityconsole.nameOverride }}
+                port: 
+                  number: {{ .Values.identityconsole.service.ports.httpPort }}
+          - path: /IdmAPI(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityconsole.nameOverride }}
+                port: 
+                  number: {{ .Values.identityconsole.service.ports.httpPort }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.identityconsole.nameOverride }}
+                port: 
+                  number: {{ .Values.identityconsole.service.ports.httpPort }}
+  {{- end }}

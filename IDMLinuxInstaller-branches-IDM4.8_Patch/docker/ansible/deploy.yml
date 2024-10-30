@@ -1,0 +1,95 @@
+---
+
+-
+#Play to deploy CoreDNS container
+  name : Deploy CoreDNS container
+  hosts : dns
+  roles :
+    - role: roles/coredns
+      when: dns_deploy == "yes"
+
+-
+#Play to deploy engine container
+  name : Deploy engine container
+  hosts : engine
+  roles :
+    - role: roles/engine
+      when: engine_deploy == "yes"
+
+
+-
+#Play to deploy Remote Loader Role
+  name : Deploy Remote Loader Container
+  hosts : remoteloader
+  roles :
+    - role: roles/remoteloader
+      when: remoteloader_deploy == "yes"
+
+-
+#Play to deploy OSP Role
+  name : Deploy OSP Container
+  hosts : osp
+  roles :
+    - role: roles/osp
+      when: osp_deploy == "yes"
+
+-
+#Play to deploy Postgres Role
+  name : Deploy Postgres Container
+  hosts : postgres
+  roles :
+    - role: roles/postgres
+      when: postgres_deploy == "yes"
+
+
+-
+#Play to deploy identityapps Role
+  name : Deploy Identity Application Container
+  hosts : identityapps
+  roles :
+    - role: roles/identityapps
+      when: identityapps_deploy == "yes"
+
+-
+#Play to deploy FormRender Role
+  name : Deploy Form Renderer Container
+  hosts : formrenderer
+  roles :
+    - role: roles/formrender
+      when: formrenderer_deploy == "yes"
+
+
+-
+#Play to deploy Activemq Role
+  name : Deploy ActiveMQ Container
+  hosts : activemq
+  roles :
+    - role: roles/activemq
+      when: activemq_deploy == "yes"
+
+-
+#Play to deploy Identity Reporting Role
+  name : Deploy Identity Reporting Container
+  hosts : rpt
+  roles :
+    - role: roles/reporting
+      when: rpt_deploy == "yes"
+
+-
+#Play to deploy FanoutAgent Role
+  name : Deploy Fanout Agent Container
+  hosts : fanoutagent
+  roles :
+    - role: roles/fanoutagent
+      when: fanoutagent_deploy == "yes"
+
+-
+#Play to deploy SSPR Role
+  name : Deploy SSPR Container
+  hosts : sspr
+  roles :
+    - role: roles/sspr
+      when: sspr_deploy == "yes"
+
+...
+

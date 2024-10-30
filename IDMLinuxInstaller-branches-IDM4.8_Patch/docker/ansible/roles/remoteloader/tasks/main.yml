@@ -1,0 +1,71 @@
+---
+# tasks file for osp_use
+
+- name : Get Remote Loader image file stats
+  local_action: stat path="{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_remoteloader.tar.gz"
+  register: rlfile
+
+- name : Check for image existence in docker host
+  shell : docker images | grep remoteloader | grep {{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+  register : imagealreadyloaded
+  ignore_errors : yes
+
+- name : Copy Remote Loader image to Docker host
+  copy :
+          src : "{{ playbook_dir | dirname }}/docker-images/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_remoteloader.tar.gz"
+          dest : "{{ remoteloader_shared_volume }}"
+  when : 
+        - rlfile.stat.exists
+        - imagealreadyloaded.rc == 1
+
+- name : Load the Remote Loader image
+  docker_image:
+    name: remoteloader:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+    load_path: "{{remoteloader_shared_volume}}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_remoteloader.tar.gz"
+    timeout: 3000
+    source: load
+  notify : Load REMOTE LOADER Image
+  when : imagealreadyloaded.rc == 1
+  
+- name : Copy silent.properties file to target server
+  copy :
+    src : "{{ playbook_dir }}/roles/variables/files/silent.properties"
+    dest : "{{ remoteloader_shared_volume }}" 
+    
+- name : Copy Remote Loader files to shared volume
+  copy :
+    src : "{{ playbook_dir }}/input/{{ item }}"
+    dest : "{{ remoteloader_shared_volume }}"
+  loop: "{{ remoteloader_files }}"
+  when: remoteloader_files is defined
+    
+- name : Deploy Remote Loader container
+  docker_container :
+    name : "{{ remoteloader_container_name }}"
+    image : "remoteloader:idm-{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}"
+    state: started
+    stop_timeout: 300
+    hostname : "{{ remoteloader_container_hostname }}"
+    network_mode : "{{ network_set }}"
+    networks :
+      - name : "{{ network_set }}"
+        ipv4_address : "{{ remoteloader_container_ipaddress }}"
+    volumes : "{{ remoteloader_volumes | default([]) }}"
+    ports : "{{ remoteloader_port_mapping | default([]) }}"
+    dns_servers : "{{ dns_list | default([]) }}"
+    env:
+      SILENT_INSTALL_FILE : /config/silent.properties
+  tags : deploy_remoteloader_container
+  notify : Deploy REMOTE LOADER Container
+
+- name : Delete Remote Loader tarball
+  file :
+          path : "{{ remoteloader_shared_volume }}/IDM_{{marketing_major}}{{marketing_minor}}{{marketing_revision}}_remoteloader.tar.gz"
+          state : absent
+          
+- name: Delete silent.properties file
+  file:
+    path: "{{ remoteloader_shared_volume }}/silent.properties"
+    state: absent
+
+

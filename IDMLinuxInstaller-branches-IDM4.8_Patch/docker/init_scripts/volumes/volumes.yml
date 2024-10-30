@@ -1,0 +1,40 @@
+# This is version of the file
+version: "1.0"
+
+config_home: /config/userapp
+
+default_home: /opt/netiq/idm/apps
+
+# This is to check if file is present in the backup location
+checkvolume:
+  default_home: tomcat/conf
+  files:
+    - ism-configuration.properties
+  
+
+# This is tag to specify volumes
+volumes:
+  - userapp
+  - tomcat 
+  - configupdate
+
+userapp:
+  default_home: UserApplication
+  files:
+    - logevent.conf
+    - logging.properties
+    - master-key.txt
+    - userapp-log4j.xml
+
+tomcat:
+  default_home: tomcat
+  dirs:
+    - conf
+  files:
+    - bin/setenv.sh
+
+configupdate:
+  default_home: configupdate
+  files:
+    - configupdate.sh
+    - configupdate.sh.properties

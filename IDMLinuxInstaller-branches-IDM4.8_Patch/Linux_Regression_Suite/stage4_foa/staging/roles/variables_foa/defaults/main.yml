@@ -1,0 +1,70 @@
+---
+##################Temporary Location Details################################
+# defaults file for variables_idm
+# Location to which build is copied onto target server
+#build_dest_location: /root/tmp
+#build_src_location: /root/tmp
+# Location on which build is mounted on target server
+#build_mount_location: /mnt
+
+
+##################IDM 4.8 Details###########################################
+# Information about IDM48 build can be found here
+#product_version: IDM 4.8
+#Modify the download link and other variables as per your requirement
+#idm_48_iso_url: 'http://blr-builder.labs.blr.novell.com/artifacts/Publish/IDM/IDM_4.8/IDM_4.8.0_FCS/IDM_Linux'
+#idm_48_iso_name: Identity_Manager_4.8_Linux.iso
+
+# Silent property file generated using create_silent_properties script
+def__idmProperties_file: "{{ role_path }}/files/sample_idm.properties"
+
+# For bringing up FOA, user need to just modify the inventory for all the required components
+
+
+##################IDM 4.8 Service Pack Details##############################
+# Information about IDM48 service pack build can be found here
+#service_pack_version: IDM 4.8.5
+#Modify the download link and other variables as per your requirement
+#service_pack_iso_url: 'http://blr-idm-jenkins.labs.blr.novell.com:8080/job/IDM4.8_Patch/job/Engine/job/IDMLinuxInstaller_IDM4.8_Patch/lastSuccessfulBuild/artifact/'
+#service_pack_iso_name: Identity_Manager_4.8.5_Linux.iso
+#Note Below value will be automatically updated by Ansible
+service_pack_iso_md5sum: d71244a4604eb6f07aa5978999e07065
+perform_idv_update:       "true"
+configure_eba:            "yes"
+ID_VAULT_ADMIN:  "admin.servers.system"
+ID_VAULT_PASSWORD:  "novell"
+
+################## Fanout Related Details ##############################
+## change the IP-address to server running activeMQ
+activemq_ip: 10.71.34.244
+
+foa_installation_location: /opt/novell/dirxml/fanoutagent
+
+## add the 3rd party JDBC jar as per FOA
+db_jar: sqljdbc42.jar # save the jar file in "roles/foa_patch/files/"
+
+################### Esxi credentials#########################################
+esxi_hostname: 164.99.90.76
+esxi_username: acontroller
+esxi_password: netiq@321
+esxi_datacenter: ha-datacenter
+esxi_folder: /
+ 
+vm_list:
+    - vm_name: SLES15SP2-ACTIVEMQ-34.244
+      vm_snapshot_name: activemq
+      
+    - vm_name: IDMDEV-WIN2019-MSSQL-35.73
+      vm_snapshot_name: MSSQL_with_idm_db
+      
+    - vm_name: SLES15SP2-ENGINE-34.243
+      vm_snapshot_name: IDM_48_MSSQL
+      
+    - vm_name: SLES15SP2-FOA-34.245
+      vm_snapshot_name: base_ansible
+  
+  
+  
+
+
+...

@@ -1,0 +1,106 @@
+---
+# tasks file for foa_patch
+
+    - name: "Unmount the mount location if mounted"
+      mount:
+         path: "{{ build_mount_location }}"
+         state: unmounted
+      notify: handler_for_message - umount_iso_if_present
+      tags: umount_iso_if_present
+
+    - name: 'Create Temporary Directory on Target Server for ansible'
+      file:
+          path: "{{ build_dest_location }}"
+          state: directory
+          mode: '644'
+      notify: handler_for_message - temp_dir_target
+      tags: temp_dir_target
+
+    - name: "Copy local {{ service_pack_iso_name }} build to Target Server"
+      copy:
+          src: "{{ build_src_location }}/{{ service_pack_iso_name }}"
+          dest: "{{ build_dest_location }}/{{ service_pack_iso_name }}"
+      notify: handler_for_message - copy_iso_to_target
+      tags: copy_iso_to_target
+
+    - name: "Mount {{ service_pack_iso_name }} on Target Server "
+      mount:
+         path: "{{ build_mount_location }}"
+         src: "{{build_dest_location}}/{{ service_pack_iso_name }}"
+         state: mounted
+         fstype: iso9660
+      notify: handler_for_message - build_mount
+      tags: build_mount
+      
+    - name: "Copy Silent Patching Properties to Target Server"
+      copy:
+           src: "{{ silent_prop_patch_foa }}"
+           dest: "{{ build_dest_location}}"
+           owner: root
+           group: root
+           mode: '644'
+      notify: handler_for_message - copy_silent_prop_patch_foa
+      tags: copy_silent_prop_patch_foa
+
+    - name: "Update Fanout Agent on Target Server"
+      shell: |
+           cd "{{ build_mount_location }}"
+           ./install.sh -ssc -s -f "{{ build_dest_location }}/silent_ansible_patch_fanoutagent.properties"
+      notify:
+           - handler_for_message - update_foa
+      tags: update_foa
+      
+    - name: "perform FOA related tasks"
+      block:
+
+        - name: "Start ActiveMQ"
+          shell: ./activemq start
+          args:
+            chdir: "/opt/netiq/idm/activemq/bin"
+          async: 600
+#          notify: handler_for_message - start_amq
+          delegate_to: "{{ activemq_ip }}"
+          tags: start_amq
+      
+        - name: "Copy Fanout related 3rd party jars to Target Server"
+          copy:
+            src: "{{ item }}"
+            dest: "{{ foa_installation_location }}/lib"
+            owner: root
+            group: root
+            mode: '755'            
+          with_items:
+            - "{{ db_jar }}"
+#         notify: handler_for_message - copy_jars_to_target
+          tags: copy_jars
+      
+        - name: "Start fanout agent"
+          shell: |
+            cd "{{ foa_installation_location }}/bin/"
+            ./startAgent
+          async: 600  
+#         notify: handler_for_message - start_foa
+          tags: start_foa
+      
+        - name: "Add foa-config file"
+          template:
+            src: "fanoutagent-config.properties"
+            dest: "{{ foa_installation_location }}/config/"
+            owner: root
+            group: root
+            mode: '644'
+#         notify: handler_for_message - copy_config_file
+          tags: copy_foa_config_file
+          
+        - name: "Start fanout agent with config file"
+          shell: |
+            cd "{{ foa_installation_location }}/bin/"
+            ./startAgent -config ../config/fanoutagent-config.properties &
+          async: 1000 
+#         notify: handler_for_message - start_foa_after_config
+          tags: start_config_foa
+#      notify: handler_for_message - config_foa_as_per_db
+      
+    - meta: flush_handlers
+...
+

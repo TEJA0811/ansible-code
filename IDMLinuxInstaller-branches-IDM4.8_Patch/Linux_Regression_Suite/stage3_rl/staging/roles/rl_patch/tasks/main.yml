@@ -1,0 +1,61 @@
+---
+# tasks file for idmengine_patch
+
+    - name: "Unmount the mount location if mounted"
+      mount:
+         path: "{{ build_mount_location }}"
+         state: unmounted
+      notify: handler_for_message - umount_iso_if_present
+      tags: umount_iso_if_present
+
+    - name: 'Create Temporary Directory on Target Server for ansible'
+      file:
+          path: "{{ build_dest_location }}"
+          state: directory
+          mode: '644'
+      notify: handler_for_message - temp_dir_target
+      tags: temp_dir_target
+
+    - name: "Copy local {{ service_pack_iso_name }} build to Target Server"
+      copy:
+          src: "{{ build_src_location }}/{{ service_pack_iso_name }}"
+          dest: "{{ build_dest_location }}/{{ service_pack_iso_name }}"
+      notify: handler_for_message - copy_iso_to_target
+      tags: copy_iso_to_target
+
+    - name: "Mount {{ service_pack_iso_name }} on Target Server "
+      mount:
+         path: "{{ build_mount_location }}"
+         src: "{{build_dest_location}}/{{ service_pack_iso_name }}"
+         state: mounted
+         fstype: iso9660
+      notify: handler_for_message - build_mount
+      tags: build_mount
+
+    - name: "Copy Silent Patching Properties to Target Server"
+      template:
+           src: "{{ silent_prop_patch }}"
+           dest: "{{ build_dest_location}}"
+           owner: root
+           group: root
+           mode: '644'
+      notify: handler_for_message - copy_silent_prop_patch
+      tags: copy_silent_prop_patch
+
+    - name: "Update RL on Target Server"
+      shell: |
+           cd "{{ build_mount_location }}"
+           ./install.sh -ssc -s -f "{{ build_dest_location }}/silent_ansible_patch_rl.properties"
+      notify:
+           - handler_for_message - update_engine
+      tags: update_rl
+
+    - name: "Remove Temporary directory created by Ansible"
+      file: 
+        path: "{{ build_dest_location }}"
+        state: absent
+      tags: idm_role_remove_tmp_dir
+
+    - meta: flush_handlers
+...
+

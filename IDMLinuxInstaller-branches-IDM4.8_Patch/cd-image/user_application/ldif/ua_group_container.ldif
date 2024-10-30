@@ -1,0 +1,16 @@
+version: 1
+
+dn: ___GROUP_ROOT_CONTAINER___
+changetype: modify
+add: ACL
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#description
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#directReports
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#mail
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#manager
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#photo
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#srvprvQueryList
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#srvprvUserPrefs
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#telephoneNumber
+ACL: 3#subtree#___GROUP_ROOT_CONTAINER___#title
+-
+

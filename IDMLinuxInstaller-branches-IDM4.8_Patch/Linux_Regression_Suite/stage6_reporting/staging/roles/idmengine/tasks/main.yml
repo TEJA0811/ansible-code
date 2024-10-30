@@ -1,0 +1,61 @@
+---
+# tasks file for idmengine
+    - name: 'Create Temporary Directory on Target Server for ansible'
+      file:
+          path: "{{ build_dest_location }}"
+          state: directory
+          mode: '644'
+      notify: handler_for_message - temp_dir_target
+      tags: temp_dir_target
+
+    - name: "Copy local {{ idm_48_iso_name }} build to Target Server"
+      copy:
+          src: "{{ build_src_location }}/{{ idm_48_iso_name }}"
+          dest: "{{ build_dest_location }}/{{ idm_48_iso_name }}"
+      notify: handler_for_message - copy_iso_to_target
+      tags: copy_iso_to_target
+
+    - name: "Unmount the mount location if mounted"
+      mount:
+         path: "{{ build_mount_location }}"
+         state: unmounted
+      notify: handler_for_message - umount_iso_if_present
+      tags: umount_iso_if_present
+
+    - name: "Mount downloaded build on Target Server "
+      mount:
+         path: "{{ build_mount_location }}"
+         src: "{{build_dest_location}}/{{ idm_48_iso_name }}"
+         state: mounted
+         fstype: iso9660
+      notify: handler_for_message - build_mount
+      tags: build_mount
+
+    - name: "Copy Engine Silent Properties file to IDM Engine Server"
+      template:
+           src: "{{ silent_prop_engine }}"
+           dest: "{{ build_dest_location}}"
+           owner: root
+           group: root
+           mode: '644'
+      notify: handler_for_message - copy_engine_silent_prop
+      tags: copy_engine_silent_prop
+    
+    - name: "Install IDM Engine on Target Server"
+      shell: |
+           cd "{{ build_mount_location }}"
+           ./install.sh -ssc -s -f "{{ build_dest_location }}/silent_ansible_engine.properties"
+      notify: handler_for_message - install_engine
+      tags: install_engine
+
+    - name: "Configure IDM Engine on Target Server"
+      shell: |
+           cd "{{ build_mount_location }}"
+           ./configure.sh -ssc -s -f "{{ build_dest_location }}/silent_ansible_engine.properties"
+      notify: 
+           - handler_for_message - configure_engine
+           - handler_for_task - remove_property_file
+      tags: configure_engine
+
+    - meta: flush_handlers
+...

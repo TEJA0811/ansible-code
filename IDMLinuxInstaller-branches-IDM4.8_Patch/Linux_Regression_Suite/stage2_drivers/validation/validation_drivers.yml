@@ -1,0 +1,23 @@
+---
+
+#Play to run XPOZ Automation
+- name: 'Run XPOZ Automation on DTD and Share Results'
+  hosts: xpoz_server
+  roles:
+  - role:                     variables_idm
+    when:                     false
+  - role:                     xpoz_engine
+    when:                     "groups[ 'idmengine' ] | length > 0 and groups[ 'xpoz_server' ] | length > 0"
+  tags: run_xpoz_engine
+    
+#Play to remove temporary result directories
+- name: 'Remove temporary result directories'
+  hosts: control
+  tasks:
+  - name: "Remove xpoz engine result directory"
+    file:
+      path: "./results_xpoz"
+      state: absent
+    delegate_to: 'localhost'
+  tags: remove_results_dir
+...

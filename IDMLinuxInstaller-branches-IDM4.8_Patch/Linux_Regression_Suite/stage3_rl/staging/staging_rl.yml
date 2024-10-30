@@ -1,0 +1,41 @@
+---
+# Play to revert snapshots of a VM
+- name: "Revert snapshot"
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  roles:
+    - role: variables_idm
+      when: false
+    - role: revert_snapshots
+      when: "vm_snapshot_name is defined"
+  tags: revert_snapshot
+  
+#Play to update Remote Loader with latest Patch
+- name: 'Update Remote Loader'
+  hosts: rl
+  become: yes
+  become_method: sudo
+  roles:
+  - role: variables_idm
+    when: false
+  - role:                     rl_patch
+    when:                     "groups[ 'rl' ] | length > 0"
+  tags: rl_patch
+
+#Play to remove temporary directory created by Ansible
+- name: 'Remove temporary directory created by Ansible at last'
+  hosts: rl
+  become: yes
+  become_method: sudo
+  roles:
+  - role:                     variables_idm
+    when:                     false
+  post_tasks:
+   - name: "Remove Temporary directory created by Ansible"
+     file: 
+       path: "{{ build_dest_location }}"
+       state: absent
+  tags: idm_role_remove_tmp_dir
+
+...

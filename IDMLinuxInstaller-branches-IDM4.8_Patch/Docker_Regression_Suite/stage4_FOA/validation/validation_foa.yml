@@ -1,0 +1,34 @@
+---
+#Play to run BVT
+- name: 'Run BVT for Fanout agent and Share Results'
+  hosts: foa_node
+  vars_files:
+    - ../../versions/vars.yml
+  roles:
+  - role:                     variables_FOA
+    when:                     false
+  - role:                     bvt_FOA
+    when:                     "groups[ 'foa_node' ] | length > 0 and groups[ 'xpoz_server' ] | length > 0"
+  tags: run_bvt_FOA
+
+  
+#Play to run XPOZ Automation
+- name: 'Run XPOZ Automation for Fanout agent and Share Results'
+  hosts: xpoz_server
+  roles:
+  - role:                     variables_FOA
+    when:                     false
+  - role:                     xpoz_FOA
+    when:                     "groups[ 'foa_node' ] | length > 0 and groups[ 'xpoz_server' ] | length > 0"
+  tags: run_xpoz_FOA
+    
+#Play to remove temporary result directories
+- name: 'Remove temporary result directories'
+  hosts: control
+  tasks:
+  - name: "Remove bvt engine result directory"
+    file:
+      path: "./results_bvt"
+      state: absent
+    delegate_to: 'localhost'
+...

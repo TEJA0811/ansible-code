@@ -1,0 +1,17 @@
+---
+# defaults file for variables_result
+
+BUILD_URL: https://blr-idm-jenkins.labs.blr.novell.com:8443/job/IDM4.8_Patch/job/IDM4.8_Patch_Pipeline/job/IDMLinuxInstaller_IDM4.8_Patch/lastSuccessfulBuild/artifact/consolidate_reports
+
+idm_48patch_build_number: http://blr-idm-jenkins.labs.blr.novell.com:8080/job/IDM4.8_Patch/job/Engine/job/IDMLinuxInstaller_IDM4.8_Patch/lastBuild/buildNumber
+results_dir: /root/consolidate_reports
+#################### Mail Details############################################  
+smtp_host: smtp.gmail.com
+smtp_port: 587
+username: testsharathkumar@gmail.com
+password: novell@123
+from_user: Ansible_Controller@example.net (CI/CD ADMIN)
+#to_user:
+#  - DL-BLR-IDMSE-QA@microfocus.com
+
+...

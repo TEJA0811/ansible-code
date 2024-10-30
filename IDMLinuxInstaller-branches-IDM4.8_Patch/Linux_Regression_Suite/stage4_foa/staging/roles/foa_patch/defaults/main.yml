@@ -1,0 +1,3 @@
+---
+# defaults file for foa_patch
+silent_prop_patch_foa: silent_ansible_patch_fanoutagent.properties 

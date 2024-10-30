@@ -1,0 +1,13 @@
+---
+# handlers file for osp_use
+
+
+- name : Load OSP Image
+  debug :
+    msg : OSP Image is loaded successfully
+
+- name : Deploy OSP Container
+  debug :
+    msg : OSP Container deployed successfully
+
+

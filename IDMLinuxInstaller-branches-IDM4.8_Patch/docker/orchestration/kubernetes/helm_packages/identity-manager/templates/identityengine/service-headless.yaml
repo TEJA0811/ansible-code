@@ -1,0 +1,42 @@
+{{- if (include "identity-manager.identityengine.deploy" .) }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "identity-manager.identityengine.name" . }}
+  annotations:
+    {{- toYaml .Values.identityengine.service.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.identityengine.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ .Values.identityengine.service.ports.ldapsPort }}
+      targetPort: ldaps-port
+      protocol: TCP
+      name: ldaps
+    - port: {{ .Values.identityengine.service.ports.ldapPort }}
+      targetPort: ldap-port
+      protocol: TCP
+      name: ldap
+    - port: {{ .Values.identityengine.service.ports.ncpPort }}
+      targetPort: ncp-port
+      protocol: TCP
+      name: ncp
+    - port: {{ .Values.identityengine.service.ports.httpPort }}
+      targetPort: http-port
+      protocol: TCP
+      name: http
+    - port: {{ .Values.identityengine.service.ports.httpsPort }}
+      targetPort: https-port
+      protocol: TCP
+      name: https
+    - port: {{ .Values.identityengine.service.ports.healthCheckPort }}
+      targetPort: hlthcheck-port
+      protocol: TCP
+      name: hlthcheck-port
+  selector:
+    {{- include "identity-manager.identityengine.selectorLabels" . | nindent 4 }}
+
+{{- end }}

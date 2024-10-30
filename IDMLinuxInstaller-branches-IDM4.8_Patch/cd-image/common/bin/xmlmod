@@ -1,0 +1,31 @@
+#!/bin/bash
+##################################################################################
+#
+# Copyright © 2017 NetIQ Corporation, a Micro Focus company. All Rights Reserved.
+#
+##################################################################################
+
+# Get script directory
+LAUNCH_DIR=`pwd`
+cd `dirname $0`
+SCRIPT_DIR=`pwd`
+cd "${LAUNCH_DIR}"
+
+# Get working java
+JAVA_CMD="java"
+
+if [ -x "/opt/netiq/common/jre/bin/java" ]
+then
+    JAVA_HOME=/opt/netiq/common/jre
+    JAVA_CMD="${JAVA_HOME}"/bin/java
+fi
+
+# Run the search
+OUTPUT=`"${JAVA_CMD}" -cp "${SCRIPT_DIR}"/../packages/utils/idm_install_utils.jar:"${SCRIPT_DIR}"/../lib/jaxen-1.1.1.jar:"${SCRIPT_DIR}"/../lib/jdom.jar:"${SCRIPT_DIR}"/../lib/saxpath.jar com.netiq.installer.utils.XMLMod "$@"`
+
+if [ "${OUTPUT}" == "[]" ]
+then
+    echo ""
+else 
+    echo "$OUTPUT"
+fi

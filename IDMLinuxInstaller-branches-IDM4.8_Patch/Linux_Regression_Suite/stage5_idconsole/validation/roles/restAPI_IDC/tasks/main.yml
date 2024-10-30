@@ -1,0 +1,83 @@
+---
+# tasks file for restAPI_IDC
+
+    - name: "Creates results Directory"
+      file:
+        path: "{{ playbook_dir }}/TestLog"
+        state: directory
+        mode: '644'
+      delegate_to: localhost
+      
+    - name: "Remove Allure results"
+      file: 
+        path: "{{ restapi_location }}/{{ item }}"
+        state: absent
+      with_items:
+        - "allure-results"
+        - "target"
+        - "TestLogs"
+      
+      
+#    - name: "Copy config properties file to REST API Directory"
+#      copy:
+#           src: "config.properties"
+#           dest: "{{ restapi_location }}/Config/"
+#           owner: root
+#           group: root
+#           mode: '777'
+#           
+#    - name: "Copy test data input file to REST API Directory"
+#      copy:
+#           src: "TestDataInput.xlsx"
+#           dest: "{{ restapi_location }}/TestData/"
+#           owner: root
+#           group: root
+#           mode: '777'
+    
+    - name: "Run RestAPI automation using Maven"
+      shell: |
+              cd "{{ restapi_location }}"
+              mvn clean package
+
+    - name: "Generate Allure report for Rest Automation of IDConsole"
+      shell: |
+              cd "{{ restapi_location }}"
+              allure generate --clean -o "{{ allure_results_dir }}"
+
+    - name: "Get file names from IDConsole server"
+      find: 
+        paths: "{{ restapi_location }}/TestLogs/"
+        recurse: no 
+      register: file_names
+
+    - name: "Get current log file path"
+      set_fact:
+        log_file_path: "{{ file_names.files | sort(attribute='mtime',reverse=true) | first }}"
+
+    - name: "Get current log file name"
+      set_fact:
+        log_file: "{{ log_file_path.path | basename }}"
+
+    - name: "Fetch log file from maven server to Ansible controller"
+      fetch: 
+        src: "{{ restapi_location }}/TestLogs/{{ log_file }}"
+        dest: "{{ results_dir }}/Regression_IDConsole/"
+        flat: yes
+        
+    - name: "Fetch allure folder from IDConsole server to Ansible controller"
+      synchronize: 
+        src: "{{ allure_results_dir }}"
+        dest: "{{ results_dir }}/Regression_IDConsole/"
+        mode: pull
+
+    - name: "Fetch test results summary"
+      shell: |
+              cd "{{ results_dir }}/Regression_IDConsole/"
+              tail -3 {{ log_file }} | cut -d " " -f7-|cut -d ":" -f2- |tr '\r\n' ' '|tr -s ' '| xargs > {{ results_dir }}/Regression_IDConsole/RESTAPI_result
+      delegate_to: localhost
+
+    - name: "Clear temporary Files on Ansible Controller"
+      shell: |
+         cd "{{ playbook_dir }}"
+         rm -rf TestLog
+      delegate_to: localhost

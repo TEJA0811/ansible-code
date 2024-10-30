@@ -1,0 +1,16 @@
+dn: cn=admin,ou=servers,o=system
+changetype: modify
+delete: ACL
+ACL: 2#subtree#cn=admin,ou=servers,o=system#[All Attributes Rights]
+ACL: 6#entry#cn=admin,ou=servers,o=system#loginScript
+ACL: 6#entry#cn=admin,ou=servers,o=system#printJobConfiguration
+-
+add: ACL
+ACL: 34#subtree#cn=admin,ou=servers,o=system#[All Attributes Rights]
+-
+add: ACL
+ACL: 38#entry#cn=admin,ou=servers,o=system#loginScript
+-
+add: ACL
+ACL: 38#entry#cn=admin,ou=servers,o=system#printJobConfiguration
+

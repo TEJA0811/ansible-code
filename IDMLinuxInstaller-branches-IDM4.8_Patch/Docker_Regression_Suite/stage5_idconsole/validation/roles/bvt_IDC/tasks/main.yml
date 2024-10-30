@@ -1,0 +1,77 @@
+---
+# tasks file for bvt_IDC
+
+    - name: "Create Automation Directory for BVT"
+      file:
+          path: "{{ idconsole_shared_volume }}/Automation"
+          state: directory
+          mode: '755'
+          
+    - name: "Copy Version Check script to Automation Directory"
+      template:
+           src: "bvt_IDC.sh"
+           dest: "{{ idconsole_shared_volume }}/Automation"
+           owner: root
+           group: root
+           mode: '777'
+
+    - name: "Add nds user to Remote VM"
+      shell: |
+        useradd -p $(openssl passwd -crypt 'novell') -u 35753 -m nds
+      ignore_errors: yes
+      
+    - name: "Assign permissions to Automation Directory"
+      shell: |
+          chown -R 35753:root {{ idconsole_shared_volume }}
+           
+    - name: "Creates results Directory"
+      file:
+        path: "{{ playbook_dir}}/results_bvt"
+        state: directory
+        mode: '644'
+      delegate_to: 'localhost'
+        
+    - name: "Run Version Check Script on IDConsole"
+      shell: docker exec -it identityconsole-container /config/Automation/bvt_IDC.sh
+          
+    - name: "Fetch files from IDConsole Server to Ansible Controller"
+      fetch:
+        src: "{{ item }}"
+        dest: "{{ playbook_dir}}/results_bvt/"
+        flat: yes
+      with_items:
+             - "{{ idconsole_shared_volume }}/Automation/BVT.html"
+             - "{{ idconsole_shared_volume }}/Automation/result"
+             - "{{ idconsole_shared_volume }}/Automation/bvt_result"
+             
+    - name: "Generate Identity Console version check html report"
+      shell: |
+          cd "{{ playbook_dir }}/results_bvt"
+          cat ./../roles/bvt_IDC/files/header.html BVT.html ./../roles/bvt_IDC/files/footer.html > BVT_IDC.html
+      delegate_to: localhost
+             
+    - name: "Copy files for consolidation"
+      copy:
+        src: "{{ item }}"
+        dest: "{{ results_dir }}/BVT_IDConsole/"
+        owner: root
+        group: root
+        mode: '644'
+      delegate_to: 'localhost'
+      with_items:
+        -  "{{ playbook_dir }}/results_bvt/bvt_result"
+        -  "{{ playbook_dir }}/results_bvt/BVT_IDC.html"
+                          
+    
+    - name: "Clear temporary Files on Ansible Controller"
+      shell: |
+         cd "{{ playbook_dir }}"
+         rm -rf results_bvt
+      delegate_to: localhost
+    
+    - name: "Remove temporary directory on target server"
+      file:
+          path: "{{ idconsole_shared_volume }}/Automation"
+          state: absent
+
+...

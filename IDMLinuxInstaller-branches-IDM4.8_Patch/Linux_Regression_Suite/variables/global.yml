@@ -1,0 +1,41 @@
+---
+# Common variables for execution
+
+##################Temporary Location Details################################
+# defaults file for variables_idm
+# Location to which build is copied onto target server
+build_src_location: /root/tmp
+build_dest_location: /root/tmp
+
+# Location on which build is mounted on target server
+build_mount_location: /mnt
+
+# Location where validation results will be stored
+results_dir: /root/consolidate_reports
+
+##################IDM 4.8 Details###########################################
+# Information about IDM48 build can be found here
+product_version: IDM 4.8
+#Modify the download link and other variables as per your requirement
+idm_48_iso_url: 'http://blr-builder.labs.blr.novell.com/artifacts/Publish/IDM/IDM_4.8/IDM_4.8.0_FCS/IDM_Linux'
+idm_48_iso_name: Identity_Manager_4.8_Linux.iso
+
+##################IDM 4.8 Service Pack Details##############################
+# Information about IDM48 service pack build can be found here
+service_pack_version: IDM 4.8.8
+#Modify the download link and other variables as per your requirement
+service_pack_iso_url: 'https://blr-idm-jenkins.labs.blr.novell.com:8443/job/IDM4.8_Patch/job/IDM4.8_Patch_Pipeline/job/IDMLinuxInstaller_IDM4.8_Patch/lastSuccessfulBuild/artifact/'
+service_pack_iso_name: Identity_Manager_4.8.8_Linux.iso
+#Note Below value will be automatically updated by Ansible
+service_pack_iso_md5sum: 2196dc306bb9176f093ff79cfd012ce1
+# Properties for idm engine patching are listed below
+# perform_idv_update:       "true"
+# configure_eba:            "yes"
+
+
+
+##################IDConsole build Details##############################
+service_pack_tar_url:  'http://blr-iam-jenkins4.labs.blr.novell.com:8080/job/Identity_console_standalone_master/364/artifact'
+service_pack_tar_name:  'IdentityConsole_160_Linux'
+##################IDM RPT Details##############################
+IDMRPT_URL: http://10.71.34.248:8080/job/IDMRPT_Reports_486/lastSuccessfulBuild/artifact/rpt670

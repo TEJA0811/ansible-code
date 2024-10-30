@@ -1,0 +1,21 @@
+{{- if (include "identity-manager.identityreporting.deploy" .) }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "identity-manager.identityreporting.name" . }}
+  annotations:
+    {{- toYaml .Values.identityreporting.service.annotations | nindent 4 }}
+  labels:
+    {{- include "identity-manager.identityreporting.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.identityreporting.service.type }}
+  ports:
+    - port: {{ .Values.identityreporting.service.ports.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "identity-manager.identityreporting.selectorLabels" . | nindent 4 }}
+
+{{- end }}

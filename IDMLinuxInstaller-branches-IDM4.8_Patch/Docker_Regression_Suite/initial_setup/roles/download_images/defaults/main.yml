@@ -1,0 +1,27 @@
+# ---
+# ##################Temporary Location Details################################
+build_src_location: /home/tmp
+# results_dir: /root/consolidate_reports
+
+
+
+# ##################IDM Patch Containers Details###########################################
+# # Information about IDM486 build can be found here
+
+# # Major version of the product.
+# marketing_major : "4"
+# # Minor version of the product.
+# marketing_minor : "8"
+# # Revision version of the product.
+# marketing_revision : "6"
+
+
+# product_version: IDM {{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}
+# #Modify the download link and other variables as per your requirement
+# idm_48_tar_url: 'https://blr-idm-jenkins.labs.blr.novell.com:8443/job/IDM4.8_Patch/job/IDM4.8_Patch_Pipeline/job/IDMLinuxInstaller_IDM4.8_Patch/lastSuccessfulBuild/artifact/'
+
+# idm_48_tar_name: Identity_Manager_{{marketing_major}}.{{marketing_minor}}.{{marketing_revision}}_Containers.tar.gz	
+# #service_pack_iso_md5sum: 2bfc822db5d7e67a3f2039f460efa167
+
+# ...
+

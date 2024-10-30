@@ -1,0 +1,41 @@
+2022-05-23 09:35:41+00:00 : IDM 4.8.0
+IDM 4.8.0
+%%% Received command line parameters : -s -ssc -slc -f /config/silent.properties
+Verifying installed components...
+###############################################################
+Identity Manager Configuration
+Mon May 23 09:35:43 UTC 2022
+###############################################################
+
+Refer log for more information at /var/opt/netiq/idm/log/idmconfigure.log
+###############################################################
+Configuring : Identity Manager Engine
+Mon May 23 09:35:46 UTC 2022
+###############################################################
+
+%%% Received command line parameters : -s -f /config/silent.properties -log /var/opt/netiq/idm/log/idmconfigure.log -wci -typical -comp ENGINE -wci
+Verifying installed components...
+Silent mode detected... skipping config_mode.
+Configuring silent mode using silent property file: /config/silent.properties
+%%% Received command line parameters : -s -f /config/silent.properties -log /var/opt/netiq/idm/log/idmconfigure.log -wci -typical -comp ENGINE -wci
+Verifying installed components...
+Silent mode detected... skipping config_mode.
+Configuring silent mode using silent property file: /config/silent.properties
+Silent mode detected... skipping config_mode.
+
+/etc/opt/netiq/idm/conf/idmconf.properties is not available.
+Configuring Identity Store
+
+Configuring the NDAP interfaces... 
+ERROR: Specified interface "s1-engine-container" is either invalid or it is not up.
+
+ERROR: /opt/novell/eDirectory/bin/ndsconfig return value = 6.
+Check /var/opt/netiq/idm/log/idmconfigure.log file for more information.
+Identity Vault configuration failed with the exit code 6
+###############################################################
+Aborted configuration of : Identity Manager Engine
+Mon May 23 09:35:56 UTC 2022
+###############################################################
+
+
+Exiting due to the failure in configuration of Identity Manager Engine.
